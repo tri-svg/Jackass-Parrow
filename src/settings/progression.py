@@ -45,7 +45,7 @@ SERIES = {
     SeriesType.BONUS: {
         "level_count": 5,
         "level_ids": levels.NORMAL_LEVEL_IDS,
-        "background": resources.RED,
+        "background": resources.BACKGROUND_RED,
     },
 }
 
