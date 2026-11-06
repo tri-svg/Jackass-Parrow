@@ -42,7 +42,7 @@
                 "path": "assets/img/gui/button_normal.png"
             },
             "hovered_image": {
-                "path": "assets/img/gui/button_normal.png"
+                "path": "assets/img/gui/button_hover.png"
             },
             "selected_image": {
                 "path": "assets/img/gui/button_normal.png"
@@ -63,6 +63,38 @@
             "shadow_width": "15",
             "text_horiz_alignment": "center",
             "text_vert_alignment": "center"
+        }
+    },
+    "@boss_case": {
+        "font": {
+            "name": "cat_comic",
+            "size": "35",
+            "regular_path": "assets/fonts/Cat Comic.ttf"
+        },
+        "colours": {
+            "normal_bg": "#00000000",
+            "hovered_bg": "#00000000",
+            "selected_bg": "#00000000",
+            "active_bg": "#00000000",
+            "disabled_bg": "#00000000",
+            "normal_text": "#FFFFFF",
+            "hovered_text": "#FFFFFF",
+            "selected_text": "#FFFFFF",
+            "active_text": "#FFFFFF"
+        },
+        "images": {
+            "normal_image": { "path": "assets/img/gui/boss_case_normal.png" },
+            "hovered_image": { "path": "assets/img/gui/boss_case_hover.png" },
+            "selected_image": { "path": "assets/img/gui/boss_case_normal.png" },
+            "disabled_image": { "path": "assets/img/gui/boss_case_normal.png" }
+        },
+        "misc": {
+            "auto_scale_images": "1",
+            "border_width": "0",
+            "shadow_width": "0",
+            "text_horiz_alignment": "center",
+            "text_vert_alignment": "bottom",
+            "text_vert_alignment_padding": "10"
         }
     },
     "@window": {
@@ -92,4 +124,4 @@
             "shadow_width": "0"
         }
     }
-}
+}

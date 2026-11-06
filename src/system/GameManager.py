@@ -6,17 +6,17 @@ from pygame.surface import Surface
 
 from src.block.BlockGroup import BlockGroup
 from src.entity.Boss import Boss
+from src.entity.bosses import create_boss
 from src.entity.EnemyGroup import EnemyGroup
 from src.entity.Player import Player
+from src.settings import display
+from src.settings.bosses import BossDifficulty, BossId
 from src.system import assets
-from src.system.GameConfig import APPConfig, DIFFICULTY, WorldType
 from src.system.LevelCollection import LevelCollection
-from src.system.WorldManager import WorldManager
+from src.system.Progression import Progression
 
 if TYPE_CHECKING:
     from src.app import App
-
-GAME_DIFFICULTY = DIFFICULTY.OLD
 
 
 class GameManager:
@@ -24,42 +24,31 @@ class GameManager:
     Classe principale gérant le déroulement du jeu.
 
     Cette classe centralise le cycle de vie des parties :
-    chargement des niveaux, gestion du joueur, des ennemis,
+    chargement des tableaux, gestion du joueur, des ennemis,
     des boss, et affichage des éléments graphiques.
 
     Attributes:
-        level_collection (LevelCollection): Gestionnaire des niveaux.
+        level_collection (LevelCollection): Construit les tableaux.
         game_surface (Surface): Surface Pygame où le jeu est rendu.
-        backgrounds (dict[WorldType, Surface]): Image de fond de chaque monde.
-        world_manager (WorldManager): Gestionnaire des mondes
+        progression (Progression): Avancement de la partie (tableaux / boss).
         game_over (bool): Indique si la partie est terminée.
-        game_over_time (int): Temps écoulé depuis la fin de partie.
+        game_over_time (int): Moment de la fin de partie (ms).
         fight_boss (bool): Indique si un combat de boss est en cours.
-        boss_mode (bool): Indique si le jeu est en mode Boss.
+        boss_mode (bool): Indique si le jeu est en mode Boss (un seul combat choisi dans le menu).
         score_saved (bool): Indique si le score a été sauvegardé.
         player (Player): Le joueur contrôlé.
         bullets (pygame.sprite.Group): Projectiles du joueur.
         enemy_group (EnemyGroup): Groupe d'ennemis.
         enemy_bullets (pygame.sprite.Group): Projectiles ennemis.
-        blocks (BlockGroup): Groupe de blocs responsable de l'apparition des ennemis.
-        boss (Boss): Instance de boss actuel.
+        blocks (BlockGroup): Blocs du tableau, responsables de l'apparition des ennemis.
+        boss (Boss): Boss actuel.
     """
 
     def __init__(self, game_surface: Surface):
-        """
-        Args:
-            game_surface (Surface): Surface sur laquelle le jeu est affiché.
-        """
         # système
         self.level_collection: LevelCollection = None
         self.game_surface = game_surface
-        normal_background = assets.image("background", "fondGameJam.png")
-        self.backgrounds = {
-            WorldType.MONDE_FORET: normal_background,
-            WorldType.MONDE_JUNGLE: normal_background,
-            WorldType.MONDE_VOLCAN: assets.image("background", "fondGameJamRed.png"),
-        }
-        self.world_manager: WorldManager = None
+        self.progression: Progression = None
 
         # état de la partie
         self.game_over: bool = False
@@ -80,27 +69,30 @@ class GameManager:
 
     # ------------------------------------------------------------------ chargement
     def _new_game(self):
-        """Réinitialise les entités et le gestionnaire de mondes."""
+        """Réinitialise les entités et la progression."""
         self.bullets = pygame.sprite.Group()
         self.enemy_group = EnemyGroup(self.game_surface)
         self.enemy_bullets = pygame.sprite.Group()
         self.player = Player()
         self.blocks = BlockGroup(self.game_surface)
         self.level_collection = LevelCollection(self.blocks)
-        self.world_manager = WorldManager(GAME_DIFFICULTY, self.level_collection)
+        self.progression = Progression()
 
     def load_tableau(self):
-        """Charge un niveau normal (non boss) et fait apparaître les ennemis."""
-        self.level_collection.load(self.world_manager.get_next_level_id())
+        """Charge le tableau suivant de la série et fait apparaître les ennemis."""
+        self.level_collection.load(self.progression.next_level_id())
         self.enemy_bullets.empty()
         self.player.rect.x, self.player.rect.y = self.level_collection.playerSpawn
-        self.blocks.spawn(self.world_manager.get_danger_level(), self.enemy_group)
+        self.blocks.spawn(self.progression.danger_level, self.enemy_group)
 
-    def load_tableau_boss(self):
-        """Charge un niveau de boss (uniquement Tom pour l'instant)."""
+    def load_tableau_boss(self, boss_id: BossId, difficulty: BossDifficulty = BossDifficulty.NORMAL,
+                          background: tuple = None):
+        """Charge l'arène d'un boss et l'y fait apparaître."""
         self.enemy_bullets.empty()
-        self.level_collection.load_boss(self.world_manager.get_current_world_type())
+        self.boss = create_boss(boss_id, self.game_surface, self.enemy_bullets, difficulty, background)
+        self.level_collection.load_arena(self.boss.config.arena)
         self.player.rect.x, self.player.rect.y = self.level_collection.playerSpawn
+        self.fight_boss = True
 
     def start_game(self):
         """Initialise une nouvelle partie en mode normal."""
@@ -116,36 +108,38 @@ class GameManager:
         self._new_game()
         self.load_tableau()
 
-    def start_boss_mode(self):
-        """Initialise une partie en mode boss."""
+    def start_boss_mode(self, boss_id: BossId):
+        """Initialise une partie en mode boss contre le boss choisi."""
         self.boss_mode = True
-        self.fight_boss = True
         self._new_game()
-        self.boss = Boss(self.game_surface, self.enemy_bullets)
-        self.load_tableau_boss()
+        self.load_tableau_boss(boss_id)
 
     def _start_boss_fight(self):
-        self.load_tableau_boss()
+        """Fin de série : combat contre le boss suivant du cycle."""
+        self.progression.next_stage()
         self.player.speed = 0
         self.player.knockback = 0
-        self.boss = Boss(self.game_surface, self.enemy_bullets)
-        self.fight_boss = True
+        # fond = celui de la série qui vient de se terminer ; HARD à partir de la 2e rencontre
+        self.load_tableau_boss(self.progression.current_boss(),
+                               self.progression.current_boss_difficulty(),
+                               self.progression.background())
 
     def _end_boss_fight(self, app: "App"):
-        """Tom est vaincu : on passe au monde suivant (tableaux HARD)."""
+        """Boss vaincu : série de tableaux suivante."""
         self.fight_boss = False
         self.blocks.empty()
-        self.world_manager.next_world()
+        self.progression.next_stage()
         self.load_tableau()
         self.boss = None
         app.menu_context.clear_active_modal()
 
     # ------------------------------------------------------------------ rendu
     def render_game_background(self):
-        world_type = self.world_manager.get_current_world_type()
-        if world_type not in self.backgrounds:
-            raise NotImplementedError(f"Le monde {WorldType(world_type).name} n'a pas de fond de jeu défini.")
-        self.game_surface.blit(self.backgrounds[world_type], (0, 0))
+        if self.fight_boss and self.boss is not None:
+            background = self.boss.background
+        else:
+            background = self.progression.background()
+        self.game_surface.blit(assets.image(*background), (0, 0))
 
     def render_game(self, app: "App", delta_time: float):
         """Dessine l'ensemble des éléments du jeu sur l'écran."""
@@ -180,13 +174,13 @@ class GameManager:
 
             self.player.handleMove(keys, self.bullets, delta_time)
             self.enemy_group.update(self.player, self.enemy_bullets, self.bullets)
-            self.enemy_bullets.update(APPConfig.WIDTH, self.blocks, delta_time)
+            self.enemy_bullets.update(display.WIDTH, self.blocks, delta_time)
 
-            # pendant le combat contre Tom, ses boucliers arrêtent aussi les tirs du joueur
-            if self.fight_boss and self.world_manager.get_current_world_type() == WorldType.MONDE_JUNGLE:
-                self.bullets.update(APPConfig.WIDTH, self.blocks.sprites() + self.boss.bouclier.sprites(), delta_time)
+            # pendant un combat de boss, ses éventuels blocs (boucliers de Tom) arrêtent aussi les tirs
+            if self.fight_boss:
+                self.bullets.update(display.WIDTH, self.blocks.sprites() + self.boss.get_obstacles(), delta_time)
             else:
-                self.bullets.update(APPConfig.WIDTH, self.blocks, delta_time)
+                self.bullets.update(display.WIDTH, self.blocks, delta_time)
 
         # joueur mort
         if self.player.health <= 0 and not self.game_over:
@@ -201,14 +195,11 @@ class GameManager:
             else:
                 self._end_boss_fight(app)
 
-        # tous les ennemis sont morts : tableau suivant (ou boss en fin de monde)
+        # tous les ennemis sont morts : tableau suivant, ou boss en fin de série
         if self.enemy_group.nbAlive() == 0 and self.boss is None and not self.boss_mode:
             self.enemy_group.empty()
             self.blocks.empty()
-            world = self.world_manager
-            if world.is_endless() or world.get_current_level() < world.get_world_max_level():
+            if self.progression.has_next_level():
                 self.load_tableau()
-            elif world.get_current_level() == world.get_world_max_level():
-                self._start_boss_fight()
             else:
-                raise ValueError("le niveau actuel ne peut pas être supérieur au niveau max du monde")
+                self._start_boss_fight()

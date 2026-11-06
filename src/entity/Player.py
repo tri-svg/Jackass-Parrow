@@ -3,25 +3,24 @@ from pygame import Surface
 
 from src.block.BlockGroup import BlockGroup
 from src.entity.Bullet import LEFT, RIGHT, Bullet
+from src.settings import display, resources
+from src.settings import player as cfg
 from src.system import assets
-from src.system.GameConfig import APPConfig
 from src.system.Sound import Sound
 
-GROUND_Y = APPConfig.HEIGHT  # bas de l'écran
+GROUND_Y = display.HEIGHT  # bas de l'écran
 
 
 class Player(pygame.sprite.Sprite):
-    # /!\ physique "fait main" : valeurs et ordre des calculs volontairement inchangés
-    BASE_SPEED = 400
-    MAX_FALL_SPEED = 1000
-    JUMP_FORCE = 1250
-    KNOCKBACK_FORCE = 1500
-    GRAVITY_STEP = 60  # ajouté à chaque frame tant que le joueur est en l'air
-    BULLET_DELAY = 1000  # délai entre les tirs en millisecondes
-    FIRING_ANIMATION_TIME = 200
-    INVINCIBILITY_TIME = 600
+    # /!\ physique "fait main" : valeurs (settings/player.py) et ordre des calculs volontairement inchangés
+    BASE_SPEED = cfg.BASE_SPEED
+    MAX_FALL_SPEED = cfg.MAX_FALL_SPEED
+    JUMP_FORCE = cfg.JUMP_FORCE
+    KNOCKBACK_FORCE = cfg.KNOCKBACK_FORCE
+    GRAVITY_STEP = cfg.GRAVITY_STEP
+    BULLET_DELAY = cfg.BULLET_DELAY
 
-    def __init__(self, x=200, y=200):
+    def __init__(self, x=cfg.SPAWN_X, y=cfg.SPAWN_Y):
         super().__init__()
         self.shield = False
         self.evasive = False
@@ -29,12 +28,12 @@ class Player(pygame.sprite.Sprite):
         self.sounds = Sound()
 
         # copies : ces surfaces sont modifiées en place (blit / set_alpha) par les animations
-        self.walk1 = assets.image("player", "player.png")
-        self.walk2 = assets.image("player", "playerWalk.png")
-        self.shield_image = assets.image("player", "player_shield.png")
-        self.player_image = assets.image_copy("player", "player.png")
-        self.firing_image = assets.image_copy("player", "player_firing.png")
-        self.dead_image = assets.image_copy("player", "player_dead.png")
+        self.walk1 = assets.image(*resources.PLAYER_TEXTURE)
+        self.walk2 = assets.image(*resources.PLAYER_WALK_TEXTURE)
+        self.shield_image = assets.image(*resources.PLAYER_SHIELD_TEXTURE)
+        self.player_image = assets.image_copy(*resources.PLAYER_TEXTURE)
+        self.firing_image = assets.image_copy(*resources.PLAYER_FIRING_TEXTURE)
+        self.dead_image = assets.image_copy(*resources.PLAYER_DEAD_TEXTURE)
         self.rect = self.player_image.get_rect(y=y, x=x)
         self.image = pygame.Surface((self.rect.width, self.rect.height), pygame.SRCALPHA)
 
@@ -43,7 +42,7 @@ class Player(pygame.sprite.Sprite):
         self.gravity = 0
         self.onGround = False
         self.knockback = 0
-        self.health = 3
+        self.health = cfg.HEALTH
         self.score = 0
 
         self.current_time = 150
@@ -82,7 +81,7 @@ class Player(pygame.sprite.Sprite):
 
         if keys[pygame.K_SPACE] and self.current_time - self.last_bullet_time > self.BULLET_DELAY:
             # le canon est à l'arrière : on tire dans le dos
-            bullets.add(Bullet(self.rect.x, self.rect.y + 50, LEFT if self.direction == RIGHT else RIGHT))
+            bullets.add(Bullet(self.rect.x, self.rect.y + cfg.BULLET_OFFSET_Y, LEFT if self.direction == RIGHT else RIGHT))
             self.knockback = self.KNOCKBACK_FORCE if self.direction == RIGHT else -self.KNOCKBACK_FORCE
             self.last_bullet_time = self.current_time
             self.sounds.son_tir.play()
@@ -92,10 +91,10 @@ class Player(pygame.sprite.Sprite):
             self.debug_shot(bullets)
 
     def debug_shot(self, bullets: pygame.sprite.Group):
-        if self.current_time - self.last_bullet_time > (self.BULLET_DELAY // 4):
-            for i in range(10, 1200, 20):
-                bullets.add(Bullet(10, i, RIGHT), Bullet(1250, i, LEFT))
-        self.last_bullet_time = self.current_time
+        if self.current_time - self.last_bullet_time > cfg.DEBUG_SHOT_DELAY:
+            for y in range(*cfg.DEBUG_SHOT_Y_RANGE):
+                bullets.add(Bullet(cfg.DEBUG_SHOT_LEFT_X, y, RIGHT), Bullet(cfg.DEBUG_SHOT_RIGHT_X, y, LEFT))
+            self.last_bullet_time = self.current_time
 
     # ------------------------------------------------------------------ état
     def addScore(self, score):
@@ -128,7 +127,8 @@ class Player(pygame.sprite.Sprite):
                         self.touched(bullet)
         else:
             # clignotement pendant l'invincibilité
-            self.image.set_alpha(100 if self.current_time % 20 <= 10 else 0)
+            visible, hidden = cfg.BLINK_ALPHAS
+            self.image.set_alpha(visible if self.current_time % cfg.BLINK_PERIOD <= cfg.BLINK_PERIOD // 2 else hidden)
 
         if self.health <= 0:
             self.image = self.dead_image
@@ -151,13 +151,13 @@ class Player(pygame.sprite.Sprite):
 
             # gauche / droite
             if (block_rect.collidepoint(rect.midleft) and rect.left < block_rect.right
-                    and rect.bottom > block_rect.top + 2):
+                    and rect.bottom > block_rect.top + cfg.BLOCK_SIDE_TOLERANCE):
                 if self.speed == -self.BASE_SPEED:
                     self.speed = 0
                 if self.knockback < 0:
                     self.knockback = -self.knockback / 2
             elif (block_rect.collidepoint(rect.midright) and rect.right > block_rect.left
-                    and rect.bottom > block_rect.top + 2):
+                    and rect.bottom > block_rect.top + cfg.BLOCK_SIDE_TOLERANCE):
                 if self.speed == self.BASE_SPEED:
                     self.speed = 0
                 if self.knockback > 0:
@@ -171,16 +171,23 @@ class Player(pygame.sprite.Sprite):
         else:
             scene.blit(pygame.transform.flip(self.image, True, False), self.rect)
 
+        if self.health <= 0:
+            # mort : on garde le sprite du joueur mort, sans clignotement
+            self.evasive = False
+            self.image = self.dead_image
+            self.image.set_alpha(255)
+            return
+
         # préparation de l'image de la frame suivante
-        is_firing = self.current_time - self.last_bullet_time < self.FIRING_ANIMATION_TIME
+        is_firing = self.current_time - self.last_bullet_time < cfg.FIRING_ANIMATION_TIME
         self.image = self.firing_image if is_firing else self.player_image
 
-        if self.current_time - self.invinsibilyTime > self.INVINCIBILITY_TIME:
+        if self.current_time - self.invinsibilyTime > cfg.INVINCIBILITY_TIME:
             self.evasive = False
             self.image.set_alpha(255)
 
             if self.speed in (self.BASE_SPEED, -self.BASE_SPEED) and self.onGround:
-                walk_frame = self.walk1 if self.current_time % 300 >= 150 else self.walk2
+                walk_frame = self.walk1 if self.current_time % cfg.WALK_ANIMATION_PERIOD >= cfg.WALK_ANIMATION_PERIOD // 2 else self.walk2
                 self.image.fill((0, 0, 0, 0))
                 self.image.blit(walk_frame, (0, 0))
             elif is_firing:
@@ -194,8 +201,8 @@ class Player(pygame.sprite.Sprite):
         self.check_bullets(enemy_bullets)
 
         # amortissement du knockback
-        self.knockback *= 0.85
-        if abs(self.knockback) < 0.1:
+        self.knockback *= cfg.KNOCKBACK_DAMPING
+        if abs(self.knockback) < cfg.KNOCKBACK_MIN:
             self.knockback = 0
 
         # saut et chute

@@ -6,22 +6,11 @@ import pygame_gui
 
 from src.gui.Menu import Menu, load_scores
 from src.gui.MenuContext import MenuContext
+from src.settings import display, menu, resources, texts
+from src.settings.bosses import INTRO_DURATION
 from src.system import assets
-from src.system.GameConfig import APPConfig
 from src.system.GameManager import GameManager
 from src.system.Sound import Sound
-
-HUD_COLOR = (255, 255, 255)
-BOSS_INTRO_DURATION = 5  # secondes
-
-# Délai max pris en compte entre deux frames. Sans ça, un ralentissement ponctuel
-# (chargement, fenêtre déplacée...) produit un delta énorme et le joueur / les tirs
-# traversent les blocs. N'a aucun effet tant que le jeu tourne au-dessus de 20 FPS.
-MAX_DELTA_TIME = 1 / 20
-
-# pygame_gui reçoit volontairement un "temps écoulé" fixe et énorme :
-# les transitions du thème (survol des boutons) sont donc instantanées, comme à l'origine.
-UI_TIME_DELTA = 60
 
 
 class App:
@@ -33,7 +22,7 @@ class App:
 
         # surface
         self.gameSurface = None
-        self.size = APPConfig.WIDTH, APPConfig.HEIGHT
+        self.size = display.WIDTH, display.HEIGHT
 
         # menu
         self.menu_context = MenuContext(MenuContext.START_MENU)
@@ -50,13 +39,13 @@ class App:
     def start(self):
         pygame.init()
         pygame.mixer.init(frequency=44100, size=-16, channels=2, buffer=512)
-        pygame.mixer.music.set_volume(0.15)
-        assets.play_music(assets.MAIN_THEME_PATH)
+        pygame.mixer.music.set_volume(resources.MUSIC_VOLUME)
+        assets.play_music(resources.MUSIC_MAIN)
         self.sounds = Sound()
         self.gameSurface = pygame.display.set_mode(self.size, pygame.HWSURFACE | pygame.DOUBLEBUF)
         self._running = True
 
-        self.HUDfont = assets.font(assets.CAT_COMIC_FONT, 36)
+        self.HUDfont = assets.font(display.CAT_COMIC_FONT, display.HUD_FONT_SIZE)
         self.game_manager = GameManager(self.gameSurface)
         self.ui_manager = pygame_gui.UIManager(self.size, str(assets.THEME_PATH))
         self.menu = Menu(self.ui_manager, self.gameSurface, self.menu_context)
@@ -64,12 +53,12 @@ class App:
     def handleEvent(self, event):
         self.ui_manager.process_events(event)
         if event.type == pygame.QUIT:
-            self._running = False
+            self.quit()
         self.menu.handleMenu(event, self)
 
     def onLoop(self):
         """Calculs et détections de la frame courante."""
-        self.ui_manager.update(UI_TIME_DELTA)
+        self.ui_manager.update(display.UI_TIME_DELTA)
         if self.menu_context.get_active_menu() == MenuContext.INGAME_MENU:
             keys = pygame.key.get_pressed()
             self.game_manager.on_loop(self.delta_time, keys, self)
@@ -79,15 +68,17 @@ class App:
                 self.menu_context.set_active_modal(MenuContext.END_GAME_MODAL)
 
     def restart(self):
-        assets.play_music(assets.MAIN_THEME_PATH)
+        assets.play_music(resources.MUSIC_MAIN)
         self.menu_context.set_active_menu(MenuContext.START_MENU)
         self.menu_context.clear_active_modal()
         self.game_manager = GameManager(self.gameSurface)
 
     def _render_hud(self):
         player = self.game_manager.player
-        self.gameSurface.blit(self.HUDfont.render(f"Score: {player.score}", True, HUD_COLOR), (10, 10))
-        self.gameSurface.blit(self.HUDfont.render(f"Vie: {player.health}", True, HUD_COLOR), (10, 40))
+        score_text = self.HUDfont.render(texts.HUD_SCORE.format(score=player.score), True, display.WHITE)
+        health_text = self.HUDfont.render(texts.HUD_HEALTH.format(health=player.health), True, display.WHITE)
+        self.gameSurface.blit(score_text, menu.HUD_SCORE_POS)
+        self.gameSurface.blit(health_text, menu.HUD_HEALTH_POS)
 
     def render(self) -> None:
         """Rendu de la frame courante."""
@@ -104,20 +95,24 @@ class App:
         if active_modal == MenuContext.INTRO_BOSS_MODAL:
             self.menu.show_boss_intro(self)
         elif active_modal == MenuContext.OUTRO_BOSS_MODAL:
-            self.menu.show_boss_win()
+            self.menu.show_boss_win(self)
         elif active_modal == MenuContext.END_GAME_MODAL:
             self.menu.show_end_screen(self)
 
         # pause du jeu pendant l'intro du boss
         boss = self.game_manager.boss
         if boss is not None:
-            if time.time() - boss.start_timer <= BOSS_INTRO_DURATION:
+            if time.time() - boss.start_timer <= INTRO_DURATION:
                 self.menu_context.set_active_modal(MenuContext.INTRO_BOSS_MODAL)
             else:
                 self.menu_context.clear_active_modal()
                 self.menu_context.set_active_menu(MenuContext.INGAME_MENU)
 
         self.ui_manager.draw_ui(self.gameSurface)
+
+    def quit(self) -> None:
+        """Arrête la boucle principale (la fenêtre se ferme à la fin de la frame)."""
+        self._running = False
 
     def shutdown(self) -> None:
         pygame.quit()
@@ -131,7 +126,7 @@ class App:
             self.onLoop()
             self.render()
             pygame.display.flip()
-            self.delta_time = min(self.clock.tick(APPConfig.FPS) / 1000.0, MAX_DELTA_TIME)
+            self.delta_time = min(self.clock.tick(display.FPS) / 1000.0, display.MAX_DELTA_TIME)
         self.shutdown()
 
     def save_score(self):

@@ -2,9 +2,6 @@
 Chargement centralisé des ressources (images, sons, polices).
 
 Chaque ressource n'est lue sur le disque qu'une seule fois puis gardée en cache.
-Avant, chaque ennemi / projectile / bloc rechargeait ses images et ses sons
-(un `Sound()` = 6 fichiers .wav décodés par ennemi), ce qui provoquait des
-micro-freezes à chaque changement de tableau et à chaque tir.
 
 ATTENTION : les surfaces renvoyées par `image()` sont partagées.
 Ne jamais les modifier en place (fill, blit, set_alpha...) : utiliser
@@ -16,19 +13,15 @@ from pathlib import Path
 
 import pygame
 
+from src.settings import resources
+
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 ASSETS_DIR = PROJECT_ROOT / "assets"
 IMG_DIR = ASSETS_DIR / "img"
 SOUNDS_DIR = ASSETS_DIR / "sounds"
 FONTS_DIR = ASSETS_DIR / "fonts"
-THEME_PATH = ASSETS_DIR / "themes" / "theme.json"
-SCORES_FILE_PATH = PROJECT_ROOT / "scores.json"
-
-MAIN_THEME_PATH = SOUNDS_DIR / "mainTheme.mp3"
-BOSS_THEME_PATH = SOUNDS_DIR / "bossTheme.mp3"
-
-CAT_COMIC_FONT = "Cat Comic.ttf"
-DIMBO_FONT = "Dimbo Regular.ttf"
+THEME_PATH = ASSETS_DIR.joinpath(*resources.GUI_THEME)
+SCORES_FILE_PATH = PROJECT_ROOT / resources.SCORES_FILE
 
 
 @lru_cache(maxsize=None)
@@ -51,6 +44,12 @@ def image_with_alpha(alpha: int, *parts: str) -> pygame.Surface:
     return surface
 
 
+@lru_cache(maxsize=None)
+def image_scaled(size: tuple, *parts: str) -> pygame.Surface:
+    """Image partagée redimensionnée (lecture seule)."""
+    return pygame.transform.scale(image(*parts), size)
+
+
 def image_copy(*parts: str) -> pygame.Surface:
     """Copie modifiable d'une image."""
     return image(*parts).copy()
@@ -66,6 +65,6 @@ def font(name: str, size: int) -> pygame.font.Font:
     return pygame.font.Font(str(FONTS_DIR / name), size)
 
 
-def play_music(path: Path) -> None:
-    pygame.mixer.music.load(str(path))
+def play_music(name: str) -> None:
+    pygame.mixer.music.load(str(SOUNDS_DIR / name))
     pygame.mixer.music.play(-1)

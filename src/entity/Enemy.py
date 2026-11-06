@@ -4,16 +4,15 @@ import pygame
 
 from src.entity.Bullet import LEFT, RIGHT
 from src.entity.EnemyBullet import EnemyBullet
+from src.settings import enemies, resources
 from src.system import assets
 from src.system.Sound import Sound
 
-DEAD_ALPHA = 150
-
 
 class Enemy(pygame.sprite.Sprite):
-    SIZE = (75, 90)
-    TEXTURE = ("entity", "chevalier.png")
-    DEAD_TEXTURE = ("entity", "chevalierMort.png")
+    SIZE = enemies.KNIGHT_SIZE
+    TEXTURE = resources.KNIGHT_TEXTURE
+    DEAD_TEXTURE = resources.KNIGHT_DEAD_TEXTURE
 
     def __init__(self, x, y):
         super().__init__()
@@ -25,12 +24,17 @@ class Enemy(pygame.sprite.Sprite):
         self.is_alive = True
         self.last_shot_time = 0
         self.angryCoef = 1
-        self.score = 100
+        self.score = enemies.KNIGHT_SCORE
 
     def update(self, player, bullet_group, player_bullets):
-        min_delay, max_delay = int(1600 * self.angryCoef), int(2200 * self.angryCoef)
+        if not self.is_alive:
+            # le chevalier mort s'envole et ne bloque plus les tirs
+            self.rect.y -= enemies.KNIGHT_DEAD_RISE_SPEED
+            return
+
+        min_delay, max_delay = (int(delay * self.angryCoef) for delay in enemies.KNIGHT_SHOT_DELAY)
         current_time = pygame.time.get_ticks()
-        if current_time - self.last_shot_time > randint(min_delay, max_delay) and self.is_alive and player.health > 0:
+        if current_time - self.last_shot_time > randint(min_delay, max_delay) and player.health > 0:
             self.shoot(bullet_group, player)
             self.last_shot_time = current_time
 
@@ -39,9 +43,10 @@ class Enemy(pygame.sprite.Sprite):
                 self.killed()
                 bullet.kill()
                 player.addScore(self.score)
+                break
 
         if not self.is_alive:
-            self.rect.y -= 5
+            self.rect.y -= enemies.KNIGHT_DEAD_RISE_SPEED
 
     def shoot(self, bullet_group, player):
         direction = LEFT if self.rect.centerx > player.rect.centerx else RIGHT
@@ -55,13 +60,13 @@ class Enemy(pygame.sprite.Sprite):
     def killed(self):
         self.sounds.son_knight_hurt.play()
         self.is_alive = False
-        self.image = assets.image_with_alpha(DEAD_ALPHA, *self.DEAD_TEXTURE)
+        self.image = assets.image_with_alpha(enemies.KNIGHT_DEAD_ALPHA, *self.DEAD_TEXTURE)
 
 
 class EnemyAngwy(Enemy):
-    TEXTURE = ("entity", "chevalier_angwy.png")
+    TEXTURE = resources.KNIGHT_ANGRY_TEXTURE
 
     def __init__(self, x, y):
         super().__init__(x, y)
-        self.score = 150
-        self.angryCoef = 0.7
+        self.score = enemies.ANGRY_KNIGHT_SCORE
+        self.angryCoef = enemies.ANGRY_KNIGHT_SHOT_COEF

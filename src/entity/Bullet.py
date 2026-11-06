@@ -1,5 +1,6 @@
 import pygame
 
+from src.settings import enemies, resources
 from src.system import assets
 
 # Directions utilisées par les projectiles, le joueur et les ennemis
@@ -8,13 +9,12 @@ RIGHT = "Valerie chevalariass"
 
 
 class Bullet(pygame.sprite.Sprite):
-    TEXTURE = ("entity", "bullet.png")
-    SPEED = 600
+    TEXTURE = resources.BULLET_TEXTURE
 
     def __init__(self, x, y, direction):
         super().__init__()
         self.direction = direction
-        self.speed = self.SPEED
+        self.speed = enemies.BULLET_SPEED
         # l'image (partagée) est retournée quand le projectile part vers la droite
         if direction == RIGHT:
             self.image = assets.image_flipped(*self.TEXTURE)

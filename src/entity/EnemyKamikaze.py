@@ -1,46 +1,46 @@
 import pygame
 
 from src.entity.Enemy import Enemy
+from src.settings import enemies, resources
 from src.system import assets
-
-WALK_TEXTURES = (("entity", "chicken_bomb.png"), ("entity", "chicken_bomb_walk.png"))
-EXPLOSION_TEXTURES = tuple(("entity", f"explosion_{i}.png") for i in range(1, 5))
 
 
 class EnemyKamikaze(Enemy):
     """Poule-bombe qui fait des allers-retours sur sa plateforme et explose au contact."""
 
-    TEXTURE = WALK_TEXTURES[0]
+    TEXTURE = resources.KAMIKAZE_WALK_TEXTURES[0]
 
     def __init__(self, x, y, platform):
         super().__init__(x, y)
-        self.walk_frames = [assets.image(*texture) for texture in WALK_TEXTURES]
-        self.walk_frames_flipped = [assets.image_flipped(*texture) for texture in WALK_TEXTURES]
+        self.score = enemies.KAMIKAZE_SCORE
+        self.walk_frames = [assets.image(*texture) for texture in resources.KAMIKAZE_WALK_TEXTURES]
+        self.walk_frames_flipped = [assets.image_flipped(*texture) for texture in resources.KAMIKAZE_WALK_TEXTURES]
         self.walk_index = 0
         self.image = self.walk_frames[self.walk_index]
         self.rect = self.image.get_rect(x=x, y=y)
         self.platform = platform
-        self.speed = 5
+        self.speed = enemies.KAMIKAZE_SPEED
         self.direction = 1
         self.animation_timer = 0
-        self.animation_delay = 100
+        self.animation_delay = enemies.KAMIKAZE_WALK_DELAY
 
         # explosion
-        self.explosion_frames = [assets.image(*texture) for texture in EXPLOSION_TEXTURES]
+        self.explosion_frames = [assets.image(*texture) for texture in resources.KAMIKAZE_EXPLOSION_TEXTURES]
         self.explosion_index = 0
         self.explosion_timer = 0
-        self.explosion_delay = 50
+        self.explosion_delay = enemies.KAMIKAZE_EXPLOSION_DELAY
         self.is_exploding = False
 
     def update(self, player, bullet_group, player_bullets):
         current_time = pygame.time.get_ticks()
 
         if self.is_alive:
+            margin = enemies.KAMIKAZE_PLATFORM_MARGIN
             self.rect.x += self.speed * self.direction
 
-            if self.rect.right > self.platform.rect.right - 15:
+            if self.rect.right > self.platform.rect.right - margin:
                 self.direction = -1
-            elif self.rect.left < self.platform.rect.left + 15:
+            elif self.rect.left < self.platform.rect.left + margin:
                 self.direction = 1
             if self.rect.colliderect(player.rect):
                 self.touch(player)

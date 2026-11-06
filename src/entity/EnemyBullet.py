@@ -1,7 +1,8 @@
 from src.entity.Bullet import Bullet
+from src.settings import resources
 
 
 class EnemyBullet(Bullet):
-    """Projectile ennemi : une poule lancée à 600px/s."""
+    """Projectile ennemi : une poule lancée."""
 
-    TEXTURE = ("entity", "chicken.png")
+    TEXTURE = resources.CHICKEN_TEXTURE

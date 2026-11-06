@@ -5,38 +5,25 @@ import pygame
 import pygame_gui
 
 from src.gui.MenuContext import MenuContext
+from src.settings import display, menu, resources, texts
+from src.settings.bosses import BOSS_MENU_ORDER, BOSSES, BossConfig, BossId
 from src.system import assets
-from src.system.GameConfig import APPConfig
 
 if TYPE_CHECKING:
     from src.app import App
 
-WIDTH, HEIGHT = APPConfig.WIDTH, APPConfig.HEIGHT
-WHITE = (255, 255, 255)
+WIDTH, HEIGHT = display.WIDTH, display.HEIGHT
+WHITE = display.WHITE
 
-LORE_TEXT = """
-            Quand il était jeune, Jackass-Parrow n'était pas le pirate le plus agile du navire.
-            C'est pour cela que ses parents lui ont greffé un canon scié sur l'arrière-train en guise de cadeau d'anniversaire.
-            Malheureusement, celui-ci fut exclu de sa fratrie lorsqu'il tira accidentellement dans la tête de son père en voulant s'étirer.
-            Jackass-Parrow passa donc le reste de son enfance dans une jungle, élevé par une tribu indigène.
 
-            Aujourd'hui, menacé par Tom de l'Abbaye et ses chevaliers, Jackass-Parrow est prêt à tout pour défendre ceux qui l'ont recueilli.
-            """
+class PassiveImage(pygame_gui.elements.UIImage):
+    """Image qui ne capte pas la souris (laisse le survol et le clic au bouton placé dessous)."""
 
-BOSS_INTRO_TEXT = [
-    "Le combat final approche",
-    "Préparez-vous à combattre le grand...",
-    "** TOM DE L'ABBAYE  **",
-]
+    def can_hover(self) -> bool:
+        return False
 
-BOSS_WIN_TEXT = [
-    "Victoire !",
-    "Vous avez vaincu l'abominable",
-    "",
-    "Tom de L'Abbaye !!",
-    "",
-    "Merci d'avoir joué!",
-]
+    def hover_point(self, hover_x: float, hover_y: float) -> bool:
+        return False
 
 
 def load_scores() -> list:
@@ -48,10 +35,17 @@ def load_scores() -> list:
 
 
 def _scale_to_menu_height(image: pygame.Surface) -> pygame.Surface:
-    return pygame.transform.scale(image, (image.get_width() * HEIGHT // 1.4 // image.get_height(), HEIGHT // 1.4))
+    ratio = menu.ILLUSTRATION_HEIGHT_RATIO
+    return pygame.transform.scale(image, (image.get_width() * HEIGHT // ratio // image.get_height(), HEIGHT // ratio))
 
 
-def _text_panel(lines: list, font: pygame.font.Font, padding: int, alpha: int = 150) -> pygame.Surface:
+def _fit(image: pygame.Surface, max_size: tuple) -> pygame.Surface:
+    """Redimensionne une image pour qu'elle tienne dans max_size en gardant ses proportions."""
+    scale = min(max_size[0] / image.get_width(), max_size[1] / image.get_height())
+    return pygame.transform.smoothscale(image, (int(image.get_width() * scale), int(image.get_height() * scale)))
+
+
+def _text_panel(lines: list, font: pygame.font.Font, padding: int, alpha: int = display.OVERLAY_ALPHA) -> pygame.Surface:
     """Bloc de texte centré sur fond noir semi-transparent."""
     text_surfaces = [font.render(line, True, WHITE) for line in lines]
     max_width = max(surface.get_width() for surface in text_surfaces)
@@ -68,72 +62,75 @@ def _text_panel(lines: list, font: pygame.font.Font, padding: int, alpha: int = 
 
 
 class Menu:
-    BUTTON_WIDTH = 220
-    BUTTON_HEIGHT = 80
-
     def __init__(self, ui_manager, game_surface: pygame.Surface, menu_context: MenuContext):
         self.ui_manager = ui_manager
         self.game_surface = game_surface
         self.menu_context = menu_context
-        self.menu_font = assets.font(assets.CAT_COMIC_FONT, 80)
-        self.lore_font = assets.font(assets.DIMBO_FONT, 38)
-        self.button_font = assets.font(assets.CAT_COMIC_FONT, 50)
-        self.leaderboard_font = assets.font(assets.CAT_COMIC_FONT, 40)
+        self.menu_font = assets.font(display.CAT_COMIC_FONT, display.TITLE_FONT_SIZE)
+        self.button_font = assets.font(display.CAT_COMIC_FONT, display.BUTTON_FONT_SIZE)
 
         self.start_button = None
         self.boss_button = None
         self.lore_button = None
         self.leaderboard_button = None
+        self.quit_button = None
 
         # fenêtres et leurs boutons de fermeture
         self.lore_window = None
         self.leaderboard_window = None
+        self.boss_window = None
         self.lore_close_button = None
         self.leaderboard_close_button = None
+        self.boss_close_button = None
+        self.boss_case_buttons: dict = {}  # bouton -> BossId
 
         # menu de fin de partie (enregistrement du score)
         self.save_button_rect = None
         self.input_box_color = WHITE
         self.user_text = ''
         self.active = False
-        self.input_box = pygame.Rect(WIDTH // 2 - 100, HEIGHT // 1.6, 200, 50)
+        self.input_box = pygame.Rect((WIDTH // 2 - menu.INPUT_BOX_SIZE[0] // 2, HEIGHT // menu.INPUT_BOX_Y_RATIO),
+                                     menu.INPUT_BOX_SIZE)
 
-        # surfaces pré-calculées (avant : rechargées / recalculées à chaque frame)
-        self._background = assets.image("background", "fondGameJam.png")
-        self._tom_image = _scale_to_menu_height(assets.image("entity", "tom.png"))
-        self._tom_rect = self._tom_image.get_rect(center=(self._tom_image.get_width() // 2 + 50, HEIGHT // 2))
-        self._perso_image = _scale_to_menu_height(assets.image("player", "playerHD.png"))
-        self._perso_rect = self._perso_image.get_rect(center=(self._perso_image.get_width() // 0.45, HEIGHT // 2))
-        self._title_shadow = self.menu_font.render("Jackass-Parrow", True, (50, 50, 50))
-        self._title = self.menu_font.render("Jackass-Parrow", True, WHITE)
-        self._game_over_text = self.menu_font.render("Game Over", True, WHITE)
-        self._save_text = self.button_font.render("Enregistrer", True, WHITE)
-        self._end_frame = pygame.Surface((WIDTH // 1.3, HEIGHT // 1.3), pygame.SRCALPHA)
-        self._end_frame.fill((0, 0, 0, 150))
-        self._boss_intro_panel = None
-        self._boss_win_panel = None
+        # surfaces pré-calculées
+        self._background = assets.image(*resources.BACKGROUND_GREEN)
+        self._tom_image = _scale_to_menu_height(assets.image(*resources.TOM_TEXTURE))
+        self._tom_rect = self._tom_image.get_rect(
+            center=(self._tom_image.get_width() // 2 + menu.TOM_ILLUSTRATION_MARGIN, HEIGHT // 2))
+        self._perso_image = _scale_to_menu_height(assets.image(*resources.PLAYER_HD_TEXTURE))
+        self._perso_rect = self._perso_image.get_rect(
+            center=(self._perso_image.get_width() // menu.HERO_ILLUSTRATION_X_RATIO, HEIGHT // 2))
+        self._title_shadow = self.menu_font.render(texts.GAME_TITLE, True, display.TITLE_SHADOW_COLOR)
+        self._title = self.menu_font.render(texts.GAME_TITLE, True, WHITE)
+        self._game_over_text = self.menu_font.render(texts.GAME_OVER, True, WHITE)
+        self._save_text = self.button_font.render(texts.BUTTON_SAVE, True, WHITE)
+        self._end_frame = pygame.Surface((WIDTH // menu.END_FRAME_RATIO, HEIGHT // menu.END_FRAME_RATIO), pygame.SRCALPHA)
+        self._end_frame.fill((0, 0, 0, display.OVERLAY_ALPHA))
+        self._boss_intro_panels: dict = {}
+        self._boss_victory_panels: dict = {}
 
         self.setup_start_menu()
 
     # ------------------------------------------------------------------ menu principal
     def _menu_button(self, text: str, index: int) -> pygame_gui.elements.UIButton:
-        x_pos = WIDTH // 2 - self.BUTTON_WIDTH // 2
+        x_pos = WIDTH // 2 - menu.BUTTON_SIZE[0] // 2
         return pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect((x_pos, HEIGHT // 2 + 70 * index), (self.BUTTON_WIDTH, self.BUTTON_HEIGHT)),
+            relative_rect=pygame.Rect((x_pos, menu.BUTTONS_TOP + menu.BUTTONS_SPACING * index), menu.BUTTON_SIZE),
             text=text,
             manager=self.ui_manager,
             object_id='@menu_button',
         )
 
     def _start_menu_buttons(self) -> tuple:
-        return self.start_button, self.boss_button, self.lore_button, self.leaderboard_button
+        return self.start_button, self.boss_button, self.lore_button, self.leaderboard_button, self.quit_button
 
     def setup_start_menu(self):
         self.game_surface.blit(self._background, (0, 0))
-        self.start_button = self._menu_button('Lancer', 0)
-        self.boss_button = self._menu_button('Mode Boss', 1)
-        self.lore_button = self._menu_button('Histoire', 2)
-        self.leaderboard_button = self._menu_button('Classement', 3)
+        self.start_button = self._menu_button(texts.BUTTON_START, 0)
+        self.boss_button = self._menu_button(texts.BUTTON_BOSS_MODE, 1)
+        self.lore_button = self._menu_button(texts.BUTTON_LORE, 2)
+        self.leaderboard_button = self._menu_button(texts.BUTTON_LEADERBOARD, 3)
+        self.quit_button = self._menu_button(texts.BUTTON_QUIT, 4)
 
     def show_start_screen(self, app: "App"):
         self.menu_context.set_active_menu(MenuContext.START_MENU)
@@ -143,8 +140,10 @@ class Menu:
 
         self.game_surface.blit(self._tom_image, self._tom_rect)
         self.game_surface.blit(self._perso_image, self._perso_rect)
-        self.game_surface.blit(self._title_shadow, self._title_shadow.get_rect(center=(WIDTH // 2 + 5, HEIGHT // 3 + 5)))
-        self.game_surface.blit(self._title, self._title.get_rect(center=(WIDTH // 2, HEIGHT // 3)))
+        shadow = menu.TITLE_SHADOW_OFFSET
+        self.game_surface.blit(self._title_shadow,
+                               self._title_shadow.get_rect(center=(WIDTH // 2 + shadow, menu.TITLE_Y + shadow)))
+        self.game_surface.blit(self._title, self._title.get_rect(center=(WIDTH // 2, menu.TITLE_Y)))
 
     def hide_start_menu(self):
         for button in self._start_menu_buttons():
@@ -160,6 +159,8 @@ class Menu:
                 self.close_lore_window()
             if self.leaderboard_window and event.ui_element == self.leaderboard_window:
                 self.close_leaderboard_window()
+            if self.boss_window and event.ui_element == self.boss_window:
+                self.close_boss_window()
 
         if app.game_manager.game_over:
             self._handle_end_screen(event, app)
@@ -171,28 +172,39 @@ class Menu:
             self.menu_context.set_active_menu(MenuContext.INGAME_MENU)
             self.hide_start_menu()
         elif element == self.boss_button:
-            app.game_manager.boss_mode = True
             app.sounds.son_button.play()
-            app.game_manager.start_boss_mode()
-            self.menu_context.set_active_menu(MenuContext.INGAME_MENU)
-            self.hide_start_menu()
+            self.show_boss_window()
+        elif element in self.boss_case_buttons:
+            boss_id = self.boss_case_buttons[element]
+            app.sounds.son_button.play()
+            self.close_boss_window()
+            self.start_boss_fight(app, boss_id)
         elif element == self.lore_button:
             app.sounds.son_button.play()
             self.show_lore_window()
         elif element == self.leaderboard_button:
             app.sounds.son_button.play()
             self.show_leaderboard_window()
+        elif element == self.quit_button:
+            app.quit()
         elif self.lore_close_button and element == self.lore_close_button:
             self.close_lore_window()
         elif self.leaderboard_close_button and element == self.leaderboard_close_button:
             self.close_leaderboard_window()
+        elif self.boss_close_button and element == self.boss_close_button:
+            self.close_boss_window()
+
+    def start_boss_fight(self, app: "App", boss_id: BossId):
+        app.game_manager.start_boss_mode(boss_id)
+        self.menu_context.set_active_menu(MenuContext.INGAME_MENU)
+        self.hide_start_menu()
 
     def _handle_end_screen(self, event, app: "App"):
         if event.type == pygame.MOUSEBUTTONDOWN:
             self.active = self.input_box.collidepoint(event.pos) and not self.active
             if self.save_button_rect is not None and self.save_button_rect.collidepoint(event.pos):
                 app.save_score()
-            self.input_box_color = (0, 150, 0) if self.active else WHITE
+            self.input_box_color = display.INPUT_ACTIVE_COLOR if self.active else WHITE
         elif event.type == pygame.KEYDOWN and self.active:
             if event.key == pygame.K_RETURN:
                 app.save_score()
@@ -202,14 +214,9 @@ class Menu:
                 self.user_text += event.unicode
 
     # ------------------------------------------------------------------ fenêtres
-    def _text_window(self, html_text: str):
-        """Crée une fenêtre (fond + texte + bouton Fermer). Renvoie (fenêtre, bouton)."""
-        window_rect = pygame.Rect((WIDTH // 4, HEIGHT // 6), (WIDTH // 2, HEIGHT // 1.5))
-        button_width, button_height, padding = 180, 70, 20
-        text_box_height = window_rect.height - button_height - padding * 2
-
+    def _window(self, rect: pygame.Rect, background: tuple) -> pygame_gui.elements.UIWindow:
         window = pygame_gui.elements.UIWindow(
-            rect=window_rect,
+            rect=rect,
             manager=self.ui_manager,
             window_display_title='',
             object_id='@window',
@@ -218,10 +225,29 @@ class Menu:
         )
         pygame_gui.elements.UIImage(
             relative_rect=pygame.Rect((0, 0), window.get_container().get_size()),
-            image_surface=assets.image_copy("background", "menu.png"),
+            image_surface=assets.image_copy(*background),
             manager=self.ui_manager,
             container=window,
         )
+        return window
+
+    def _close_button(self, window, center_x: int, top: int) -> pygame_gui.elements.UIButton:
+        width, height = menu.WINDOW_BUTTON_SIZE
+        return pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect((center_x - width // 2, top), (width, height)),
+            text=texts.BUTTON_CLOSE,
+            manager=self.ui_manager,
+            container=window,
+            object_id='@menu_button',
+        )
+
+    def _text_window(self, html_text: str):
+        """Fenêtre avec fond, texte et bouton Fermer. Renvoie (fenêtre, bouton)."""
+        window_rect = pygame.Rect(*menu.TEXT_WINDOW_RECT)
+        padding = menu.WINDOW_PADDING
+        text_box_height = window_rect.height - menu.WINDOW_BUTTON_SIZE[1] - padding * 2
+
+        window = self._window(window_rect, resources.MENU_WINDOW_BACKGROUND)
         text_box = pygame_gui.elements.UITextBox(
             html_text=html_text,
             relative_rect=pygame.Rect(padding, padding, window_rect.width - padding * 2, text_box_height),
@@ -229,19 +255,12 @@ class Menu:
             container=window,
             object_id='@text_box_in_window',
         )
-        close_button = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(((window_rect.width - button_width) // 2, text_box.get_relative_rect().bottom + padding),
-                                      (button_width, button_height)),
-            text='Fermer',
-            manager=self.ui_manager,
-            container=window,
-            object_id='@menu_button',
-        )
+        close_button = self._close_button(window, window_rect.width // 2, text_box.get_relative_rect().bottom + padding)
         return window, close_button
 
     def show_lore_window(self):
         if self.lore_window is None:
-            self.lore_window, self.lore_close_button = self._text_window(LORE_TEXT)
+            self.lore_window, self.lore_close_button = self._text_window(texts.LORE)
 
     def close_lore_window(self):
         self.lore_window.kill()
@@ -251,14 +270,62 @@ class Menu:
     def show_leaderboard_window(self):
         if self.leaderboard_window is None:
             scores = sorted(load_scores(), key=lambda x: x["score"], reverse=True)
-            leaderboard_text = "".join(f"{i + 1}. {score['pseudo']} - {score['score']}<br>"
-                                       for i, score in enumerate(scores[:10]))
+            leaderboard_text = "".join(texts.LEADERBOARD_LINE.format(rank=i + 1, pseudo=score['pseudo'], score=score['score'])
+                                       for i, score in enumerate(scores[:texts.LEADERBOARD_SIZE]))
             self.leaderboard_window, self.leaderboard_close_button = self._text_window(leaderboard_text)
 
     def close_leaderboard_window(self):
         self.leaderboard_window.kill()
         self.leaderboard_window = None
         self.leaderboard_close_button = None
+
+    def show_boss_window(self):
+        """Fenêtre modale "Mode Boss" : une case cliquable par boss."""
+        if self.boss_window is not None:
+            return
+        window_size = menu.BOSS_WINDOW_SIZE
+        window_rect = pygame.Rect(((WIDTH - window_size[0]) // 2, (HEIGHT - window_size[1]) // 2), window_size)
+        self.boss_window = self._window(window_rect, resources.BOSS_MENU_BACKGROUND)
+        self.boss_window.set_blocking(True)  # bloque les clics sur le menu principal
+
+        case_width, case_height = menu.BOSS_CASE_SIZE
+        container_width = self.boss_window.get_container().get_size()[0]
+        gap = (container_width - case_width * len(BOSS_MENU_ORDER)) // (len(BOSS_MENU_ORDER) + 1)
+        self.boss_case_buttons = {}
+        for index, boss_id in enumerate(BOSS_MENU_ORDER):
+            case_rect = pygame.Rect((gap + index * (case_width + gap), menu.BOSS_CASES_TOP), menu.BOSS_CASE_SIZE)
+            self._boss_case(BOSSES[boss_id], boss_id, case_rect)
+
+        self.boss_close_button = self._close_button(self.boss_window, container_width // 2,
+                                                    menu.BOSS_CASES_TOP + case_height + menu.WINDOW_PADDING)
+
+    def _boss_case(self, config: BossConfig, boss_id: BossId, case_rect: pygame.Rect):
+        # bouton (texture des boutons du menu) qui couvre toute la case, puis portrait par-dessus
+        button = pygame_gui.elements.UIButton(
+            relative_rect=case_rect,
+            text=config.name,
+            manager=self.ui_manager,
+            container=self.boss_window,
+            object_id='@boss_case',
+        )
+        self.boss_case_buttons[button] = boss_id
+
+        padding = menu.BOSS_PORTRAIT_PADDING
+        portrait_area = (case_rect.width - 2 * padding, case_rect.height - menu.BOSS_NAME_HEIGHT - padding)
+        portrait = _fit(assets.image(*config.menu_texture), portrait_area)
+        portrait_rect = portrait.get_rect(midtop=(case_rect.centerx, case_rect.top + padding))
+        PassiveImage(
+            relative_rect=portrait_rect,
+            image_surface=portrait,
+            manager=self.ui_manager,
+            container=self.boss_window,
+        )
+
+    def close_boss_window(self):
+        self.boss_window.kill()
+        self.boss_window = None
+        self.boss_close_button = None
+        self.boss_case_buttons = {}
 
     # ------------------------------------------------------------------ modales
     def _blit_centered(self, surface: pygame.Surface):
@@ -267,31 +334,40 @@ class Menu:
         self.game_surface.blit(surface, (x, y))
 
     def show_boss_intro(self, app: "App"):
-        if self._boss_intro_panel is None:
-            self._boss_intro_panel = _text_panel(BOSS_INTRO_TEXT, assets.font(assets.DIMBO_FONT, 52), padding=60)
-        self._blit_centered(self._boss_intro_panel)
+        config = app.game_manager.boss.config
+        if config.name not in self._boss_intro_panels:
+            lines = [line.format(title=config.intro_title) for line in texts.BOSS_INTRO]
+            font = assets.font(display.DIMBO_FONT, display.BOSS_INTRO_FONT_SIZE)
+            self._boss_intro_panels[config.name] = _text_panel(lines, font, padding=menu.BOSS_INTRO_PADDING)
+        self._blit_centered(self._boss_intro_panels[config.name])
 
-    def show_boss_win(self):
-        if self._boss_win_panel is None:
-            self._boss_win_panel = _text_panel(BOSS_WIN_TEXT, assets.font(assets.DIMBO_FONT, 48), padding=20)
-        self._blit_centered(self._boss_win_panel)
+    def show_boss_win(self, app: "App"):
+        config = app.game_manager.boss.config
+        if config.name not in self._boss_victory_panels:
+            lines = [line.format(title=config.victory_title) for line in texts.BOSS_VICTORY]
+            font = assets.font(display.DIMBO_FONT, display.BOSS_WIN_FONT_SIZE)
+            self._boss_victory_panels[config.name] = _text_panel(lines, font, padding=menu.BOSS_VICTORY_PADDING)
+        self._blit_centered(self._boss_victory_panels[config.name])
 
     def show_end_screen(self, app: "App"):
         self.menu_context.set_active_modal(MenuContext.END_GAME_MODAL)
         self.game_surface.blit(self._end_frame, self._end_frame.get_rect(center=(WIDTH // 2, HEIGHT // 2)))
 
+        shadow = menu.TITLE_SHADOW_OFFSET
         self.game_surface.blit(self._game_over_text,
-                               self._game_over_text.get_rect(center=(WIDTH // 2 + 5, HEIGHT // 3 + 5)))
-        score_text = self.menu_font.render(f"Score : {app.game_manager.player.score}", True, WHITE)
-        self.game_surface.blit(score_text, score_text.get_rect(center=(WIDTH // 2 + 5, HEIGHT // 2 + 5)))
+                               self._game_over_text.get_rect(center=(WIDTH // 2 + shadow, HEIGHT // 3 + shadow)))
+        score_text = self.menu_font.render(texts.END_SCORE.format(score=app.game_manager.player.score), True, WHITE)
+        self.game_surface.blit(score_text, score_text.get_rect(center=(WIDTH // 2 + shadow, HEIGHT // 2 + shadow)))
 
         # zone de saisie du pseudo
-        pygame.draw.rect(self.game_surface, self.input_box_color, self.input_box, 2)
+        pygame.draw.rect(self.game_surface, self.input_box_color, self.input_box, menu.INPUT_BORDER_WIDTH)
         input_text = self.button_font.render(self.user_text, True, WHITE)
-        self.game_surface.blit(input_text, (self.input_box.x + 5, self.input_box.y + 5))
+        self.game_surface.blit(input_text, (self.input_box.x + menu.INPUT_TEXT_PADDING,
+                                            self.input_box.y + menu.INPUT_TEXT_PADDING))
 
         # bouton enregistrer (plus clair au survol)
-        self.save_button_rect = self._save_text.get_rect(center=(WIDTH // 2, HEIGHT // 1.3))
+        self.save_button_rect = self._save_text.get_rect(center=(WIDTH // 2, HEIGHT // menu.SAVE_BUTTON_Y_RATIO))
         hovered = self.save_button_rect.collidepoint(pygame.mouse.get_pos())
-        pygame.draw.rect(self.game_surface, (0, 200, 0) if hovered else (0, 150, 0), self.save_button_rect, border_radius=10)
+        color = display.SAVE_BUTTON_HOVER_COLOR if hovered else display.SAVE_BUTTON_COLOR
+        pygame.draw.rect(self.game_surface, color, self.save_button_rect, border_radius=menu.SAVE_BUTTON_RADIUS)
         self.game_surface.blit(self._save_text, self.save_button_rect)

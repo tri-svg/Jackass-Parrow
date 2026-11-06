@@ -4,8 +4,7 @@ import pygame
 
 from src.entity.Enemy import Enemy, EnemyAngwy
 from src.entity.EnemyKamikaze import EnemyKamikaze
-
-ANGRY_DANGER_THRESHOLD = 5  # au-delà, les chevaliers normaux sont remplacés par des chevaliers énervés
+from src.settings import enemies
 
 
 class BlockGroup(pygame.sprite.Group):
@@ -19,19 +18,18 @@ class BlockGroup(pygame.sprite.Group):
     def spawn(self, danger_level: int, enemyGroup):
         """Fait apparaître `danger_level` ennemis (au plus un par bloc spawnable)."""
         spawnables = self.get_spawnable()
-        angry = danger_level > ANGRY_DANGER_THRESHOLD
+        angry = danger_level > enemies.ANGRY_DANGER_THRESHOLD
         nb_enemies = min(danger_level, len(spawnables))
 
         for bloc in sample(spawnables, nb_enemies):
-            x = randint(bloc.rect.x, (bloc.rect.x + bloc.rect.width) - (Enemy.SIZE[0] // 2))
-            y = bloc.rect.y - 90
+            x = randint(bloc.rect.x, (bloc.rect.x + bloc.rect.width) - (enemies.KNIGHT_SIZE[0] // 2))
 
-            if randint(0, 3) == 0:
-                new_enemy = EnemyKamikaze(x, bloc.rect.y - 70, bloc)
+            if randint(0, enemies.KAMIKAZE_CHANCE - 1) == 0:
+                new_enemy = EnemyKamikaze(x, bloc.rect.y - enemies.KAMIKAZE_SPAWN_OFFSET_Y, bloc)
             elif angry:
-                new_enemy = EnemyAngwy(x, y)
+                new_enemy = EnemyAngwy(x, bloc.rect.y - enemies.KNIGHT_SPAWN_OFFSET_Y)
             else:
-                new_enemy = Enemy(x, y)
+                new_enemy = Enemy(x, bloc.rect.y - enemies.KNIGHT_SPAWN_OFFSET_Y)
             enemyGroup.add(new_enemy)
 
     def render(self):
