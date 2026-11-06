@@ -156,5 +156,14 @@ ARENA_TOM = [
     (17, 0, 6, 3),
     (17, 3, 1, 11, False, True),
 ]
-ARENA_PAYA = ARENA_TOM
-ARENA_BALERINO = ARENA_TOM
+# Paya et Balerino (provisoire) : sol plat, un mur visible de chaque côté sur toute la hauteur
+ARENA_PAYA = [
+    (2, 14),
+    (-1, -1, 1, 17),
+    (24, -1, 1, 17),
+]
+ARENA_BALERINO = [
+    (2, 14),
+    (-1, -1, 1, 17),
+    (24, -1, 1, 17),
+]
