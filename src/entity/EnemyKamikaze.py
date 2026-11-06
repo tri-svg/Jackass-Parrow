@@ -1,23 +1,21 @@
-from random import randint
 import pygame
+
 from src.entity.Enemy import Enemy
-from pathlib import Path
+from src.system import assets
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-CHICKEN_BOMB_IMAGE_PATH = PROJECT_ROOT / "assets" / "img" / "entity" / "chicken_bomb.png"
-CHICKEN_BOMB_WALK_IMAGE_PATH = PROJECT_ROOT / "assets" / "img" / "entity" / "chicken_bomb_walk.png"
+WALK_TEXTURES = (("entity", "chicken_bomb.png"), ("entity", "chicken_bomb_walk.png"))
+EXPLOSION_TEXTURES = tuple(("entity", f"explosion_{i}.png") for i in range(1, 5))
 
-CHICKEN_EXPLOSION_FRAMES = [
-    f"{str(PROJECT_ROOT)}/assets/img/entity/explosion_{i}.png" for i in range(1, 5)
-]
 
 class EnemyKamikaze(Enemy):
+    """Poule-bombe qui fait des allers-retours sur sa plateforme et explose au contact."""
+
+    TEXTURE = WALK_TEXTURES[0]
+
     def __init__(self, x, y, platform):
         super().__init__(x, y)
-        self.walk_frames = [
-            pygame.image.load(str(CHICKEN_BOMB_IMAGE_PATH)).convert_alpha(),
-            pygame.image.load(str(CHICKEN_BOMB_WALK_IMAGE_PATH)).convert_alpha()
-        ]
+        self.walk_frames = [assets.image(*texture) for texture in WALK_TEXTURES]
+        self.walk_frames_flipped = [assets.image_flipped(*texture) for texture in WALK_TEXTURES]
         self.walk_index = 0
         self.image = self.walk_frames[self.walk_index]
         self.rect = self.image.get_rect(x=x, y=y)
@@ -28,9 +26,7 @@ class EnemyKamikaze(Enemy):
         self.animation_delay = 100
 
         # explosion
-        self.explosion_frames = [
-            pygame.image.load(CHICKEN_EXPLOSION_FRAMES[i]).convert_alpha() for i in range(4)
-        ]
+        self.explosion_frames = [assets.image(*texture) for texture in EXPLOSION_TEXTURES]
         self.explosion_index = 0
         self.explosion_timer = 0
         self.explosion_delay = 50
@@ -39,45 +35,42 @@ class EnemyKamikaze(Enemy):
     def update(self, player, bullet_group, player_bullets):
         current_time = pygame.time.get_ticks()
 
-        if self.alive:
+        if self.is_alive:
             self.rect.x += self.speed * self.direction
 
             if self.rect.right > self.platform.rect.right - 15:
                 self.direction = -1
             elif self.rect.left < self.platform.rect.left + 15:
                 self.direction = 1
-            if pygame.sprite.collide_rect(self, player):
+            if self.rect.colliderect(player.rect):
                 self.touch(player)
 
             if current_time - self.animation_timer > self.animation_delay:
                 self.animation_timer = current_time
                 self.walk_index = (self.walk_index + 1) % len(self.walk_frames)
-                self.image = self.walk_frames[self.walk_index]
+                frames = self.walk_frames_flipped if self.direction == 1 else self.walk_frames
+                self.image = frames[self.walk_index]
 
-                if self.direction == 1:
-                    self.image = pygame.transform.flip(self.image, True, False)
             for bullet in player_bullets:
-                if pygame.sprite.collide_rect(self, bullet):
+                if self.rect.colliderect(bullet.rect):
                     self.killed()
                     bullet.kill()
-                    player.addScore(100)  # ajoute 100 au score
+                    player.addScore(self.score)
 
-        if self.is_exploding:
-            current_time = pygame.time.get_ticks()
-            if current_time - self.explosion_timer > self.explosion_delay:
-                self.explosion_timer = current_time
-                self.explosion_index += 1
-                if self.explosion_index < len(self.explosion_frames):
-                    self.image = self.explosion_frames[self.explosion_index]
-                else:
-                    self.is_exploding = False
-                    self.kill()
+        if self.is_exploding and current_time - self.explosion_timer > self.explosion_delay:
+            self.explosion_timer = current_time
+            self.explosion_index += 1
+            if self.explosion_index < len(self.explosion_frames):
+                self.image = self.explosion_frames[self.explosion_index]
+            else:
+                self.is_exploding = False
+                self.kill()
 
     def shoot(self, bullet_group, player):
         pass
 
     def killed(self):
-        self.alive = False
+        self.is_alive = False
         self.is_exploding = True
         self.explosion_index = 0
         self.explosion_timer = pygame.time.get_ticks()
@@ -86,4 +79,3 @@ class EnemyKamikaze(Enemy):
     def touch(self, player):
         player.touched()
         self.killed()
-

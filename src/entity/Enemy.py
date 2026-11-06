@@ -2,66 +2,66 @@ from random import randint
 
 import pygame
 
+from src.entity.Bullet import LEFT, RIGHT
 from src.entity.EnemyBullet import EnemyBullet
+from src.system import assets
 from src.system.Sound import Sound
-from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-CHEVALIER_IMAGE_PATH = PROJECT_ROOT / "assets" / "img" / "entity" / "chevalier.png"
-CHEVALIER_MORT_IMAGE_PATH = PROJECT_ROOT / "assets" / "img" /"entity" / "chevalierMort.png"
-CHEVALIER_ANGWY_IMAGE_PATH = PROJECT_ROOT / "assets" / "img" / "entity" / "chevalier_angwy.png"
+DEAD_ALPHA = 150
+
 
 class Enemy(pygame.sprite.Sprite):
-    SIZE = (75,90)
+    SIZE = (75, 90)
+    TEXTURE = ("entity", "chevalier.png")
+    DEAD_TEXTURE = ("entity", "chevalierMort.png")
+
     def __init__(self, x, y):
-        pygame.sprite.Sprite.__init__(self)
+        super().__init__()
         self.sounds = Sound()
-        self.direction = 'gauche'
-        self.image = pygame.image.load(str(CHEVALIER_IMAGE_PATH)).convert_alpha()
+        self.direction = LEFT
+        self.image = assets.image(*self.TEXTURE)
         self.rect = self.image.get_rect(x=x, y=y)
-        self.alive = True
+        # NB : ne pas nommer cet attribut "alive", ça écrase la méthode Sprite.alive() de pygame
+        self.is_alive = True
         self.last_shot_time = 0
         self.angryCoef = 1
         self.score = 100
 
     def update(self, player, bullet_group, player_bullets):
-        min_speed, max_speed = int(1600*self.angryCoef),int(2200*self.angryCoef)
+        min_delay, max_delay = int(1600 * self.angryCoef), int(2200 * self.angryCoef)
         current_time = pygame.time.get_ticks()
-        if current_time - self.last_shot_time > randint(min_speed,max_speed) and self.alive and player.health > 0:
+        if current_time - self.last_shot_time > randint(min_delay, max_delay) and self.is_alive and player.health > 0:
             self.shoot(bullet_group, player)
             self.last_shot_time = current_time
 
         for bullet in player_bullets:
-            if pygame.sprite.collide_rect(self, bullet):
+            if self.rect.colliderect(bullet.rect):
                 self.killed()
                 bullet.kill()
                 player.addScore(self.score)
-        if not self.alive:
+
+        if not self.is_alive:
             self.rect.y -= 5
 
-
-
     def shoot(self, bullet_group, player):
-        direction = 'gauche' if self.rect.centerx > player.rect.centerx else 'Valerie Chevalariass'
+        direction = LEFT if self.rect.centerx > player.rect.centerx else RIGHT
         if self.direction != direction:
             self.image = pygame.transform.flip(self.image, True, False)
         self.direction = direction
 
-        pygame.mixer.Sound(self.sounds.son_enemy_fire).play()
-        bullet = EnemyBullet(self.rect.centerx, self.rect.centery, direction)
-        bullet_group.add(bullet)
+        self.sounds.son_enemy_fire.play()
+        bullet_group.add(EnemyBullet(self.rect.centerx, self.rect.centery, direction))
 
     def killed(self):
-        pygame.mixer.Sound(self.sounds.son_knight_hurt).play()
-        self.image.fill((0, 0, 255))
-        self.alive = False
-        self.image = pygame.image.load(str(CHEVALIER_MORT_IMAGE_PATH)).convert_alpha()
-        self.image.set_alpha(150)
+        self.sounds.son_knight_hurt.play()
+        self.is_alive = False
+        self.image = assets.image_with_alpha(DEAD_ALPHA, *self.DEAD_TEXTURE)
+
 
 class EnemyAngwy(Enemy):
+    TEXTURE = ("entity", "chevalier_angwy.png")
+
     def __init__(self, x, y):
         super().__init__(x, y)
         self.score = 150
         self.angryCoef = 0.7
-        self.image = pygame.image.load(str(CHEVALIER_ANGWY_IMAGE_PATH)).convert_alpha()
-        self.rect = self.image.get_rect(x=x, y=y)

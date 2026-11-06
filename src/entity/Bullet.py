@@ -1,32 +1,38 @@
 import pygame
-from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
+from src.system import assets
 
-BULLET_IMAGE_PATH = PROJECT_ROOT / "assets" / "img" / "entity" / "bullet.png"
+# Directions utilisées par les projectiles, le joueur et les ennemis
+LEFT = "gauche"
+RIGHT = "Valerie chevalariass"
 
 
 class Bullet(pygame.sprite.Sprite):
-    def __init__(self, x, y, direction):
-        pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.image.load(str(BULLET_IMAGE_PATH)).convert_alpha()
-        self.rect = self.image.get_rect(x=x, y=y)
-        self.direction = direction
-        self.speed = 600
+    TEXTURE = ("entity", "bullet.png")
+    SPEED = 600
 
-        if self.direction == 'Valerie chevalariass':
-            self.image = pygame.transform.flip(self.image, True, False)
+    def __init__(self, x, y, direction):
+        super().__init__()
+        self.direction = direction
+        self.speed = self.SPEED
+        # l'image (partagée) est retournée quand le projectile part vers la droite
+        if direction == RIGHT:
+            self.image = assets.image_flipped(*self.TEXTURE)
+        else:
+            self.image = assets.image(*self.TEXTURE)
+        self.rect = self.image.get_rect(x=x, y=y)
 
     def update(self, scene_width, blocs, delta_time: float):
-        if self.direction == 'gauche':
+        if self.direction == LEFT:
             self.rect.x -= self.speed * delta_time
         else:
             self.rect.x += self.speed * delta_time
 
-
+        rect = self.rect
         for bloc in blocs:
-            if pygame.sprite.collide_rect(self, bloc) and not bloc.transparent:
+            if not bloc.transparent and rect.colliderect(bloc.rect):
                 self.kill()
+                return
 
-        if self.rect.left > scene_width or self.rect.right < 0:
+        if rect.left > scene_width or rect.right < 0:
             self.kill()

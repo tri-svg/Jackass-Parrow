@@ -5,40 +5,38 @@ import pygame
 
 from src.block.Block import Block
 from src.block.BlockGroup import BlockGroup
+from src.entity.Bullet import LEFT
 from src.entity.EnemyBullet import EnemyBullet
-from pathlib import Path
-
 from src.entity.Player import Player
 from src.gui.MenuContext import MenuContext
+from src.system import assets
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-TOM_IMAGE_PATH = PROJECT_ROOT / "assets" / "img" / "entity" / "tom.png"
-TOM_DAMAGE_IMAGE_PATH = PROJECT_ROOT / "assets" / "img" / "entity" / "tomDamage.png"
-
-BOSS_THEME_PATH = PROJECT_ROOT / "assets" / "sounds" / "bossTheme.mp3"
-MAIN_THEME_PATH = PROJECT_ROOT / "assets" / "sounds" / "mainTheme.mp3"
 
 class Boss(pygame.sprite.Sprite):
+    """Tom de l'Abbaye."""
+
     X = 900
     Y = 110
-    SIZE =(144,286)
-    START_TIME = pygame.time.get_ticks()
+    SIZE = (144, 286)
     BOUCLIER_COLUMN = 15
     BOUCLIER_WIDTH = 1
     BOUCLIER_HEIGHT = 3
-    
+    EVASIVE_DURATION = 2  # secondes d'invulnérabilité après un coup
+    OUTRO_DURATION = 5  # secondes entre la mort et la fin de l'outro
+    ATTACK_SPEED = 1000  # ms entre deux tirs
+    ANGRY_ATTACK_SPEED = 700
+    ANGRY_HEALTH = 3
 
-    def __init__(self,game_surface,enemy_bullets):
-        pygame.sprite.Sprite.__init__(self)
+    def __init__(self, game_surface, enemy_bullets):
+        super().__init__()
 
         self.start_timer = time.time()
-
         self.game_surface = game_surface
 
-        # Surface
-        self.TEXTURE_TOM = pygame.transform.scale(pygame.image.load(str(TOM_IMAGE_PATH)),(self.SIZE[0]*2,self.SIZE[1]*2)).convert_alpha()
-        self.TEXTURE_TOM_DAMAGE = pygame.transform.scale(pygame.image.load(str(TOM_DAMAGE_IMAGE_PATH)),(self.SIZE[0]*2,self.SIZE[1]*2)).convert_alpha()
-        self.image = pygame.transform.scale(pygame.image.load(str(TOM_IMAGE_PATH)),(self.SIZE[0]*2,self.SIZE[1]*2)).convert_alpha()
+        size = (self.SIZE[0] * 2, self.SIZE[1] * 2)
+        self.TEXTURE_TOM = pygame.transform.scale(assets.image("entity", "tom.png"), size)
+        self.TEXTURE_TOM_DAMAGE = pygame.transform.scale(assets.image("entity", "tomDamage.png"), size)
+        self.image = self.TEXTURE_TOM.copy()  # surface de travail, redessinée à chaque frame
         self.rect = self.image.get_rect(x=self.X, y=self.Y)
 
         self.health = 10
@@ -46,94 +44,73 @@ class Boss(pygame.sprite.Sprite):
         self.lastEvasiveTime = 0
         self.deathTime = 0
         self.outroFinished = False
-        self.elapsed_time = None
-
 
         self.index_hole = 0
-        self.attackSpeed = 1000
+        self.attackSpeed = self.ATTACK_SPEED
         self.bullets = enemy_bullets
         self.timeLastBullet = 0
 
         self.bouclier = BlockGroup(self.game_surface)
-        pygame.mixer.music.load(str(BOSS_THEME_PATH))
-        pygame.mixer.music.play(-1)
+        assets.play_music(assets.BOSS_THEME_PATH)
+
+    def is_evasive(self) -> bool:
+        return time.time() - self.lastEvasiveTime <= self.EVASIVE_DURATION
 
     def generateBouclier(self):
-        self.bouclier.clear(self.game_surface,self.game_surface)
         self.bouclier.empty()
-        choice = [0,1,2]
+        choice = [0, 1, 2]
         # évite de laisser 2 fois le même trou de bouclier d'affilée
         choice.remove(self.index_hole)
         self.index_hole = random.choice(choice)
-        
-        for bouclier_index in choice:
-            self.bouclier.add(
-                Block(self.BOUCLIER_COLUMN,
-                        12-(bouclier_index*4),
-                        self.BOUCLIER_WIDTH,
-                        self.BOUCLIER_HEIGHT)
-                )
 
-    
+        for bouclier_index in choice:
+            self.bouclier.add(Block(self.BOUCLIER_COLUMN, 12 - (bouclier_index * 4),
+                                    self.BOUCLIER_WIDTH, self.BOUCLIER_HEIGHT))
+
+    def _set_texture(self, texture: pygame.Surface):
+        self.image.fill((0, 0, 0, 0))
+        self.image.blit(texture, (0, 0))
+
     def render(self):
         self.game_surface.blit(self.image, self.rect)
-        #si pas evasif
-        if  time.time() - self.lastEvasiveTime > 2:
-            self.image.fill((0,0,0,0))
-            self.image.blit(self.TEXTURE_TOM, (0, 0))
+        # préparation de l'image de la frame suivante
+        if not self.is_evasive():
+            self._set_texture(self.TEXTURE_TOM)
             self.image.set_alpha(255)
-        #si evasif
         else:
-            self.image.fill((0,0,0,0))
-            self.image.blit(self.TEXTURE_TOM_DAMAGE, (0, 0))
-            if int(time.time() * 1000) % 200 <= 100:
-                self.image.set_alpha(200)
-            else:
-                self.image.set_alpha(150)
+            self._set_texture(self.TEXTURE_TOM_DAMAGE)
+            self.image.set_alpha(200 if int(time.time() * 1000) % 200 <= 100 else 150)
         self.bouclier.render()
-        
-    def update(self, player_bullets, player : Player, menu_context: MenuContext):
 
-        #la fonction update est appelée uniquement si l'active_menu est INGAME_MENU
-        
-        # si le boss est mort
+    def update(self, player_bullets, player: Player, menu_context: MenuContext):
+        # la fonction update est appelée uniquement si aucun menu modal n'est actif
+        now = time.time()
+
         if self.health <= 0:
-            # si deathTime n'a jamais été initialisé
             if self.deathTime == 0:
                 self.bullets.empty()
-                self.deathTime = time.time()
+                self.deathTime = now
             menu_context.set_active_modal(MenuContext.OUTRO_BOSS_MODAL)
-            
+            self._set_texture(self.TEXTURE_TOM_DAMAGE)
 
-            #self.attackSpeed = 999999 # assez lent pour ne plus tirer avant la fin
-            self.image.fill((0,0,0,0))
-            self.image.blit(self.TEXTURE_TOM_DAMAGE, (0, 0))
-
-            #fin de l'outro
-            if time.time() - self.deathTime > 5:
+            # fin de l'outro (la musique n'est relancée qu'une fois)
+            if not self.outroFinished and now - self.deathTime > self.OUTRO_DURATION:
                 self.outroFinished = True
-                pygame.mixer.music.load(str(MAIN_THEME_PATH))
-                pygame.mixer.music.play(-1)
-        else:
-            # gestion des tirs
-            if time.time() - self.timeLastBullet > self.attackSpeed / 1000.0:
-                self.timeLastBullet = time.time()
-                ybullet = player.rect.y
-                self.bullets.add(EnemyBullet(self.rect.midleft[0] - 100, ybullet, 'gauche'))
+                assets.play_music(assets.MAIN_THEME_PATH)
+            return
 
-            # si pas evasif
-            if  time.time() - self.lastEvasiveTime > 2:
-                # collision avec les tirs du joueur
-                for bullet in player_bullets:
-                    if pygame.sprite.collide_rect(self, bullet):
-                        self.generateBouclier()
-                        self.health -= 1
-                        self.lastEvasiveTime = time.time()
-                        bullet.kill()
-                        # colère
-                        if self.health <= 3:
-                            self.attackSpeed = 700
-                
+        # tirs
+        if now - self.timeLastBullet > self.attackSpeed / 1000.0:
+            self.timeLastBullet = now
+            self.bullets.add(EnemyBullet(self.rect.midleft[0] - 100, player.rect.y, LEFT))
 
-           
-                
+        # collision avec les tirs du joueur (si pas en mode évasif)
+        if not self.is_evasive():
+            for bullet in player_bullets:
+                if self.rect.colliderect(bullet.rect):
+                    self.generateBouclier()
+                    self.health -= 1
+                    self.lastEvasiveTime = time.time()
+                    bullet.kill()
+                    if self.health <= self.ANGRY_HEALTH:  # colère
+                        self.attackSpeed = self.ANGRY_ATTACK_SPEED

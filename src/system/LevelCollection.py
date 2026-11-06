@@ -1,11 +1,11 @@
-from src.block.BlockGroup import BlockGroup
 from src.block.Block import Block
+from src.block.BlockGroup import BlockGroup
 from src.system.GameConfig import WorldType
 
 
 class LevelCollection:
-    # si il y a  5 élements alors le block est spawnable
-    # les tuple à 2 éléments sont le point de spawn
+    # tuple à 2 éléments : point de spawn du joueur (en cases de 50px)
+    # tuple à 4+ éléments : bloc (x, y, largeur, hauteur[, spawnable[, transparent]])
 
     LEVEL1 = [
         (12, 14),
@@ -117,10 +117,6 @@ class LevelCollection:
         (21, 8, 4, 2, True),
         (21, 14, 4, 2, True),
     ]
-    # équivalent des 5 niveaux en hard
-
-    # des niveaux à perdre le sens
-
     LEVELS = [
         LEVEL1,
         LEVEL2,
@@ -134,59 +130,48 @@ class LevelCollection:
         LEVEL5HARD,
     ]
 
+    BOSS_LEVELS = {
+        WorldType.MONDE_JUNGLE: [
+            (1, 1),
+            (-1, 3, 2, 1, False),
+            (-1, 7, 4, 1, False),
+            (-1, 11, 6, 1, False),
+            (-1, 15, 8, 1, False),
+            (17, 14, 6, 2, False),
+            (17, 0, 6, 3),
+            (17, 3, 1, 11, False, True),
+        ],
+    }
+
     def __init__(self, blockGroup: BlockGroup):
         self.blocks = blockGroup
         self.playerSpawn = (0, 0)
 
     def build_tableau(self, lstBloc: list):
+        """
+        Format d'un élément de lstBloc :
+            (x, y)                                   -> point de spawn du joueur
+            (x, y, largeur, hauteur[, spawnable[, transparent]])  -> bloc
+        """
         # sol
         self.blocks.add(Block(-1, 16, 26, 1))
-        # mur
+        # murs
         self.blocks.add(Block(-2, -8, 1, 28))
         self.blocks.add(Block(25, -8, 1, 28))
 
-        # bloc contenus dans le paramètre lstBloc
         for bloc in lstBloc:
             if len(bloc) == 2:
                 self.playerSpawn = (bloc[0] * 50, bloc[1] * 50)
-            else:
-                if len(bloc) <= 4:
-                    spawn = False
-                else:
-                    spawn = bloc[4]
-                if len(bloc) <= 5:
-                    transparent = False
-                else:
-                    transparent = bloc[5]
-                self.blocks.add(
-                    Block(
-                        x=bloc[0],
-                        y=bloc[1],
-                        width=bloc[2],
-                        height=bloc[3],
-                        spawnable=spawn,
-                        transparent=transparent,
-                    )
-                )
+                continue
+            x, y, width, height, *flags = bloc
+            spawnable = flags[0] if len(flags) > 0 else False
+            transparent = flags[1] if len(flags) > 1 else False
+            self.blocks.add(Block(x, y, width, height, spawnable=spawnable, transparent=transparent))
 
     def load_boss(self, world_index: WorldType):
-        if world_index == WorldType.MONDE_JUNGLE:
-            lstBloc = [
-                (1, 1),
-                (-1, 3, 2, 1, False),
-                (-1, 7, 4, 1, False),
-                (-1, 11, 6, 1, False),
-                (-1, 15, 8, 1, False),
-                (17, 14, 6, 2, False),
-                (17, 0, 6, 3),
-                (17, 3, 1, 11, False, True),
-            ]
-        else:
-            raise NotImplementedError(
-                f"Aucun boss ne correspond au monde {WorldType(world_index).name}"
-            )
-        self.build_tableau(lstBloc)
+        if world_index not in self.BOSS_LEVELS:
+            raise NotImplementedError(f"Aucun boss ne correspond au monde {WorldType(world_index).name}")
+        self.build_tableau(self.BOSS_LEVELS[world_index])
 
-    def load(self, levelId):
-        lstBloc = self.LEVELS[levelId - 1]
-        self.build_tableau(lstBloc)
+    def load(self, levelId: int):
+        self.build_tableau(self.LEVELS[levelId - 1])

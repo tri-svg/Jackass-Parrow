@@ -1,6 +1,2 @@
-from enum import IntEnum
-
-class AppConfig(IntEnum):
-    WIDTH = 1280
-    HEIGHT = 800
-    FPS = 60
+# Conservé pour compatibilité : utiliser src.system.GameConfig.APPConfig
+from src.system.GameConfig import APPConfig as AppConfig
