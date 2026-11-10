@@ -33,6 +33,17 @@ TOM_TEXTURE = ("entity", "tom.png")
 TOM_DAMAGE_TEXTURE = ("entity", "tomDamage.png")
 BOSS_PLACEHOLDER_TEXTURE = ("placeholder", "placeHolder_boss.png")
 
+# Balerino : À COMPLÉTER, en attendant les sprites manquants utilisent la pose de repos
+BALERINO_TEXTURE = ("entity", "balerino.png")  # pose de repos (pause entre deux attaques, portrait du menu)
+BALERINO_DAMAGE_TEXTURE = BALERINO_TEXTURE  # TODO : affichée pendant l'invulnérabilité après un coup
+# danse : une image par sens de déplacement ; la pirouette entre les deux est calculée (cf. BALERINO_SPIN_*)
+BALERINO_DANCE_LEFT_TEXTURE = ("entity", "balerino_left.png")  # va vers la gauche
+BALERINO_DANCE_RIGHT_TEXTURE = ("entity", "balerino_right.png")  # va vers la droite
+BALERINO_STRETCH_TEXTURE = BALERINO_TEXTURE  # TODO : étiré sur la pointe des pieds avant de tirer les poules
+BALERINO_STRETCH_DAMAGE_TEXTURE = BALERINO_TEXTURE  # TODO : étiré et touché
+BALERINO_SPLIT_TEXTURE = ("entity", "balerino_stomp.png")  # grand écart (mis à la largeur de l'arène)
+BALERINO_SPLIT_DAMAGE_TEXTURE = BALERINO_SPLIT_TEXTURE  # TODO : grand écart touché
+
 # Sons
 SOUND_SHOT = "tir.wav"
 SOUND_BUTTON = "button.wav"

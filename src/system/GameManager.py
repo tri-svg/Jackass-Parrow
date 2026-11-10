@@ -90,7 +90,7 @@ class GameManager:
         """Charge l'arène d'un boss et l'y fait apparaître."""
         self.enemy_bullets.empty()
         self.boss = create_boss(boss_id, self.game_surface, self.enemy_bullets, difficulty, background)
-        self.level_collection.load_arena(self.boss.config.arena)
+        self.level_collection.load_arena(self.boss.config.arena, self.boss.config.player_spawn)
         self.player.rect.x, self.player.rect.y = self.level_collection.playerSpawn
         self.fight_boss = True
 

@@ -145,9 +145,8 @@ LEVELS = [
 NORMAL_LEVEL_IDS = (1, 5)
 HARD_LEVEL_IDS = (6, 10)
 
-# Arènes de boss
+# Arènes de boss (sans point d'apparition : il est dans la config du boss, settings/bosses.py)
 ARENA_TOM = [
-    (1, 1),
     (-1, 3, 2, 1, False),
     (-1, 7, 4, 1, False),
     (-1, 11, 6, 1, False),
@@ -156,14 +155,30 @@ ARENA_TOM = [
     (17, 0, 6, 3),
     (17, 3, 1, 11, False, True),
 ]
-# Paya et Balerino (provisoire) : sol plat, un mur visible de chaque côté sur toute la hauteur
-ARENA_PAYA = [
-    (2, 14),
-    (-1, -1, 1, 17),
-    (24, -1, 1, 17),
+# Murs visibles de chaque côté, sur toute la hauteur ; l'arène jouable va de ARENA_FIRST_COLUMN
+# à ARENA_LAST_COLUMN (incluses)
+ARENA_WALL_LEFT_COLUMN = -1
+ARENA_WALL_RIGHT_COLUMN = 24
+ARENA_FIRST_COLUMN = ARENA_WALL_LEFT_COLUMN + 1
+ARENA_LAST_COLUMN = ARENA_WALL_RIGHT_COLUMN - 1
+ARENA_WALL_TOP_ROW = -1
+ARENA_WALLS = [
+    (ARENA_WALL_LEFT_COLUMN, ARENA_WALL_TOP_ROW, 1, GROUND_ROW - ARENA_WALL_TOP_ROW),
+    (ARENA_WALL_RIGHT_COLUMN, ARENA_WALL_TOP_ROW, 1, GROUND_ROW - ARENA_WALL_TOP_ROW),
 ]
-ARENA_BALERINO = [
-    (2, 14),
-    (-1, -1, 1, 17),
-    (24, -1, 1, 17),
+
+# Paya (provisoire) : sol plat entre les deux murs
+ARENA_PAYA = list(ARENA_WALLS)
+
+# Balerino : une plateforme contre chaque mur
+BALERINO_PLATFORM_WIDTH = 4  # en cases
+BALERINO_PLATFORM_HEIGHT = 3  # en cases, du sol jusqu'au dessus de la plateforme
+BALERINO_PLATFORM_FLOATING = False  # False : pilier plein jusqu'au sol ; True : plateforme flottante
+BALERINO_PLATFORM_THICKNESS = 1  # en cases, épaisseur d'une plateforme flottante
+BALERINO_PLATFORM_TOP_ROW = GROUND_ROW - BALERINO_PLATFORM_HEIGHT
+_balerino_platform_rows = BALERINO_PLATFORM_THICKNESS if BALERINO_PLATFORM_FLOATING else BALERINO_PLATFORM_HEIGHT
+ARENA_BALERINO = ARENA_WALLS + [
+    (ARENA_FIRST_COLUMN, BALERINO_PLATFORM_TOP_ROW, BALERINO_PLATFORM_WIDTH, _balerino_platform_rows),
+    (ARENA_LAST_COLUMN - BALERINO_PLATFORM_WIDTH + 1, BALERINO_PLATFORM_TOP_ROW,
+     BALERINO_PLATFORM_WIDTH, _balerino_platform_rows),
 ]

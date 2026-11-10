@@ -28,18 +28,18 @@ SERIES_ORDER = [SeriesType.PREMIERE, SeriesType.DEUXIEME, SeriesType.TROISIEME]
 
 SERIES = {
     SeriesType.PREMIERE: {
-        "level_count": 3,  # nombre de tableaux de la série
+        "level_count": 4,  # nombre de tableaux de la série
         "level_ids": levels.NORMAL_LEVEL_IDS,  # tableaux tirés au hasard (bornes incluses)
         "background": resources.BACKGROUND_BLUE,  # fond des tableaux ET du boss qui suit
     },
     SeriesType.DEUXIEME: {
-        "level_count": 5,
+        "level_count": 6,
         "level_ids": levels.NORMAL_LEVEL_IDS,
         "background": resources.BACKGROUND_GREEN,
     },
     SeriesType.TROISIEME: {
         "level_count": 5,
-        "level_ids": levels.NORMAL_LEVEL_IDS,
+        "level_ids": levels.HARD_LEVEL_IDS,
         "background": resources.BACKGROUND_RED,
     },
     SeriesType.BONUS: {

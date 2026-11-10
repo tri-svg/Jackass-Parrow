@@ -27,6 +27,7 @@ class LevelCollection:
         """Charge un tableau par son id (à partir de 1)."""
         self.build_tableau(levels.LEVELS[levelId - 1])
 
-    def load_arena(self, arena: list):
-        """Charge l'arène d'un boss."""
+    def load_arena(self, arena: list, player_spawn: tuple):
+        """Charge l'arène d'un boss ; player_spawn est une case (x, y)."""
         self.build_tableau(arena)
+        self.playerSpawn = (player_spawn[0] * levels.TILE_SIZE, player_spawn[1] * levels.TILE_SIZE)

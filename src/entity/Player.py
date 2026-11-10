@@ -100,20 +100,31 @@ class Player(pygame.sprite.Sprite):
     def addScore(self, score):
         self.score += score
 
-    def touched(self, bullet=None):
+    def touched(self, bullet=None) -> bool:
+        """
+        Encaisse un coup. Renvoie False (sans effet) si le joueur est déjà invincible, y compris
+        quand il a été touché plus tôt dans la même frame : une seule source de dégâts à la fois.
+        """
+        if self.evasive:
+            return False
         self.sounds.son_hurt.play()
         self.health -= 1
         self.invinsibilyTime = self.current_time
         self.evasive = True
         if bullet:
             bullet.kill()
+        return True
 
     def _is_parried(self, bullet) -> bool:
+        """
+        Le bouclier pare tout ce qui arrive du côté où il est tourné : la moitié avant du joueur sur toute
+        sa hauteur, y compris le bas (ex. une poule qui frôle les pieds quand il dépasse du bord d'une plateforme).
+        """
         if not self.shield:
             return False
         if self.direction == LEFT:
-            return bullet.rect.collidepoint(self.rect.midleft) or bullet.rect.collidepoint(self.rect.topleft)
-        return bullet.rect.collidepoint(self.rect.midright) or bullet.rect.collidepoint(self.rect.topright)
+            return bullet.rect.centerx <= self.rect.centerx
+        return bullet.rect.centerx >= self.rect.centerx
 
     def check_bullets(self, enemy_bullets):
         # collisions avec les projectiles

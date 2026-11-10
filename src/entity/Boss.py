@@ -4,7 +4,7 @@ import pygame
 
 from src.entity.Player import Player
 from src.gui.MenuContext import MenuContext
-from src.settings import resources
+from src.settings import levels, resources
 from src.settings.bosses import BOSSES, BossConfig, BossDifficulty, BossId
 from src.system import assets
 
@@ -39,7 +39,8 @@ class Boss(pygame.sprite.Sprite):
         self.TEXTURE = pygame.transform.scale(assets.image(*self.config.texture), self.config.size)
         self.TEXTURE_DAMAGE = pygame.transform.scale(assets.image(*self.config.damage_texture), self.config.size)
         self.image = self.TEXTURE.copy()  # surface de travail, redessinée à chaque frame
-        self.rect = self.image.get_rect(topleft=self.config.position)
+        spawn_x, spawn_y = self.config.boss_spawn
+        self.rect = self.image.get_rect(topleft=(round(spawn_x * levels.TILE_SIZE), round(spawn_y * levels.TILE_SIZE)))
 
         self.health = self.config.health
         self.lastEvasiveTime = 0
