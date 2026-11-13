@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 import pygame
 from pygame.key import ScancodeWrapper
@@ -62,8 +62,10 @@ class GameManager:
         self.boss_mode: bool = False
         self.score_saved: bool = False
         self.special_level: bool = False  # tableau spécial en cours (cf. settings/special_level.py)
-        self.debug_level: bool = False  # tableau lancé depuis Options > Debug
-        self.debug_background: tuple = None
+        # tableau d'essai (Options > Debug, builder.py) : fin au dernier ennemi tué ou à la mort du joueur
+        self.test_level: bool = False
+        self.test_background: tuple = None
+        self.on_test_end: Callable[[], None] = None
 
         # entités
         self.player: Player = None
@@ -127,21 +129,30 @@ class GameManager:
         self._new_game()
         self.load_tableau()
 
-    def start_debug_level(self, level_id: int):
-        """Options > Debug : un tableau précis, un ennemi sur chaque bloc spawnable ; fin au dernier ennemi tué."""
+    def start_test_level(self, layout: list, background: tuple, on_end: Callable[[], None]):
+        """
+        Tableau d'essai : `layout` au format de settings/levels.py, un ennemi sur chaque bloc spawnable
+        (progression.DEBUG_LEVEL). `on_end` est appelé quand tous les ennemis sont tués ou que le joueur meurt.
+        """
         self.boss_mode = False
         self.fight_boss = False
         self.game_over = False
         self._new_game()
-        self.debug_level = True
-        difficulty = level_difficulty(level_id)
-        self.debug_background = levels.LEVEL_DIFFICULTY_BACKGROUNDS.get(difficulty, self.progression.background())
+        self.test_level = True
+        self.test_background = background
+        self.on_test_end = on_end
         self.progression.enter_level()
-        self.level_collection.load(level_id, self.debug_background)
+        self.level_collection.build_tableau(layout, background)
         self.player.rect.x, self.player.rect.y = self.level_collection.playerSpawn
         debug = progression_cfg.DEBUG_LEVEL
         self.blocks.spawn(len(self.blocks.get_spawnable()), self.enemy_group, debug["enemies"],
                           self.progression.level, debug["angry_above_level"])
+
+    def start_debug_level(self, level_id: int, on_end: Callable[[], None]):
+        """Options > Debug : essai d'un tableau de settings/levels.py, sur le fond de sa difficulté."""
+        backgrounds = levels.LEVEL_DIFFICULTY_BACKGROUNDS
+        background = backgrounds.get(level_difficulty(level_id), backgrounds["normal"])
+        self.start_test_level(levels.LEVELS[level_id - 1], background, on_end)
 
     def start_boss_mode(self, boss_id: BossId):
         """Initialise une partie en mode boss contre le boss choisi."""
@@ -214,8 +225,8 @@ class GameManager:
     def render_game_background(self):
         if self.fight_boss and self.boss is not None:
             background = self.boss.background
-        elif self.debug_level:
-            background = self.debug_background
+        elif self.test_level:
+            background = self.test_background
         elif self.special_level and special_level.BACKGROUND is not None:
             background = special_level.BACKGROUND
         else:
@@ -273,10 +284,11 @@ class GameManager:
             else:
                 self.bullets.update(display.WIDTH, self.blocks, delta_time)
 
-        # tableau de debug : tous les ennemis tués (ou joueur mort) -> retour à Options > Debug
-        if self.debug_level:
+        # tableau d'essai : tous les ennemis tués (ou joueur mort) -> on rend la main (menu Debug, builder)
+        if self.test_level:
             if self.enemy_group.nbAlive() == 0 or self.player.health <= 0:
-                app.return_to_debug_menu()
+                self.test_level = False
+                self.on_test_end()
             return
 
         # joueur mort

@@ -214,7 +214,7 @@ class Menu:
         def start_debug_level(level_id: int):
             self.debug_page = self.options_window.debug_page
             self.options_window = None
-            app.game_manager.start_debug_level(level_id)
+            app.game_manager.start_debug_level(level_id, app.return_to_debug_menu)
             self.menu_context.set_active_menu(MenuContext.INGAME_MENU)
             self.hide_start_menu()
 
