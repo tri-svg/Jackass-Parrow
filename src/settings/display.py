@@ -23,6 +23,7 @@ CAT_COMIC_FONT = "Cat Comic.ttf"
 DIMBO_FONT = "Dimbo Regular.ttf"
 
 HUD_FONT_SIZE = 36
+HUD_LEVEL_FONT_SIZE = 24  # compteur de niveau
 TITLE_FONT_SIZE = 80
 BUTTON_FONT_SIZE = 50
 BOSS_INTRO_FONT_SIZE = 52

@@ -7,6 +7,7 @@ import pygame_gui
 from src.gui.Menu import Menu, load_scores
 from src.gui.MenuContext import MenuContext
 from src.settings import display, menu, resources, texts
+from src.settings import player as player_cfg
 from src.settings.bosses import INTRO_DURATION
 from src.system import assets
 from src.system.GameManager import GameManager
@@ -46,6 +47,7 @@ class App:
         self._running = True
 
         self.HUDfont = assets.font(display.CAT_COMIC_FONT, display.HUD_FONT_SIZE)
+        self.HUD_level_font = assets.font(display.CAT_COMIC_FONT, display.HUD_LEVEL_FONT_SIZE)
         self.game_manager = GameManager(self.gameSurface)
         self.ui_manager = pygame_gui.UIManager(self.size, str(assets.THEME_PATH))
         self.menu = Menu(self.ui_manager, self.gameSurface, self.menu_context)
@@ -76,9 +78,14 @@ class App:
     def _render_hud(self):
         player = self.game_manager.player
         score_text = self.HUDfont.render(texts.HUD_SCORE.format(score=player.score), True, display.WHITE)
-        health_text = self.HUDfont.render(texts.HUD_HEALTH.format(health=player.health), True, display.WHITE)
+        health_text = self.HUDfont.render(texts.HUD_HEALTH.format(health=max(player.health, 0), max_health=player_cfg.MAX_HEALTH), True, display.WHITE)
         self.gameSurface.blit(score_text, menu.HUD_SCORE_POS)
         self.gameSurface.blit(health_text, menu.HUD_HEALTH_POS)
+
+        level_text = self.HUD_level_font.render(texts.HUD_LEVEL.format(level=self.game_manager.progression.level),
+                                                True, display.WHITE)
+        margin_x, margin_y = menu.HUD_LEVEL_MARGIN
+        self.gameSurface.blit(level_text, (display.WIDTH - margin_x - level_text.get_width(), margin_y))
 
     def render(self) -> None:
         """Rendu de la frame courante."""

@@ -1,3 +1,13 @@
+from enum import Enum
+
+
+class EnemyType(Enum):
+    """Types d'ennemis des tableaux ; leur apparition se règle par série dans settings/progression.py."""
+    KNIGHT = "chevalier"
+    ANGRY_KNIGHT = "chevalier_angwy"
+    KAMIKAZE = "poule_kamikaze"
+
+
 BULLET_SPEED = 600  # px/s (tirs du joueur et poules lancées par les ennemis)
 
 # Chevalier
@@ -7,13 +17,11 @@ KNIGHT_SHOT_DELAY = (1600, 2200)  # ms, tiré au hasard entre ces deux valeurs
 KNIGHT_DEAD_ALPHA = 150
 KNIGHT_DEAD_RISE_SPEED = 5  # px/frame : le chevalier mort s'envole
 
-# Chevalier énervé (remplace les chevaliers normaux au-delà d'un certain danger)
+# Chevalier énervé (apparition : "enemies" et "angry_above_level" des séries, settings/progression.py)
 ANGRY_KNIGHT_SCORE = 150
 ANGRY_KNIGHT_SHOT_COEF = 0.7  # multiplie le délai entre deux tirs
-ANGRY_DANGER_THRESHOLD = 5
 
 # Poule kamikaze
-KAMIKAZE_CHANCE = 4  # 1 chance sur N qu'un ennemi soit une poule kamikaze
 KAMIKAZE_SCORE = 100
 KAMIKAZE_SPEED = 5  # px/frame
 KAMIKAZE_PLATFORM_MARGIN = 15  # px avant le bord de la plateforme pour faire demi-tour

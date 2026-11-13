@@ -6,6 +6,7 @@ BACKGROUND_RED = ("background", "fondGameJamRed.png")
 BACKGROUND_BLUE = ("background", "fondGameJamBlue.png")
 MENU_WINDOW_BACKGROUND = ("background", "menu.png")
 BOSS_MENU_BACKGROUND = ("placeholder", "placeHolder_menu.png")
+DIALOGUE_BACKGROUND = ("placeholder", "placeHolder_dialogue.png")  # boîte de dialogue (cadre gardé, intérieur en mosaïque : menu.DIALOGUE_FRAME)
 
 # Blocs
 BLOCK_TEXTURE = ("block", "block.png")
@@ -32,6 +33,11 @@ KAMIKAZE_EXPLOSION_TEXTURES = tuple(("entity", f"explosion_{i}.png") for i in ra
 TOM_TEXTURE = ("entity", "tom.png")
 TOM_DAMAGE_TEXTURE = ("entity", "tomDamage.png")
 BOSS_PLACEHOLDER_TEXTURE = ("placeholder", "placeHolder_boss.png")
+
+# Tableau spécial (cf. settings/special_level.py)
+CUISTOT_LEG_TEXTURE = ("entity", "cuistot_leg.png")  # bas de Cuistot Bongo
+CUISTOT_BONGO_TEXTURE = ("entity", "cuistot_bongo.png")  # empilé sur la jambe
+OVEN_TEXTURE = ("entity", "oven.png")
 
 # Balerino : À COMPLÉTER, en attendant les sprites manquants utilisent la pose de repos
 BALERINO_TEXTURE = ("entity", "balerino.png")  # pose de repos (pause entre deux attaques, portrait du menu)

@@ -1,4 +1,4 @@
-from src.settings.display import HEIGHT, WIDTH
+from src.settings.display import CAT_COMIC_FONT, DIMBO_FONT, HEIGHT, WIDTH
 
 # Boutons du menu principal
 BUTTON_SIZE = (220, 80)
@@ -39,4 +39,21 @@ BOSS_VICTORY_PADDING = 20
 
 # HUD
 HUD_SCORE_POS = (10, 10)
+HUD_LEVEL_MARGIN = (10, 10)  # px depuis le coin haut-droit (compteur de niveau, sans fond)
 HUD_HEALTH_POS = (10, 40)
+
+# Boîte de dialogue (style RPG Maker, en bas de l'écran ; textes : settings/texts.py)
+DIALOGUE_HEIGHT = 160  # px (posée sur la bande du bas du tableau spécial)
+DIALOGUE_MARGIN = 20  # px entre la boîte et les bords de l'écran
+DIALOGUE_PADDING = 16  # px entre le cadre et le contenu
+DIALOGUE_FRAME = 4  # px : épaisseur du cadre dans l'image de fond (gardé tel quel, l'intérieur est répété)
+DIALOGUE_PORTRAIT_SIZE = 128  # px, portrait carré à gauche
+DIALOGUE_NAME_FONT = CAT_COMIC_FONT
+DIALOGUE_NAME_FONT_SIZE = 34
+DIALOGUE_NAME_COLOR = (255, 210, 80)
+DIALOGUE_NAME_GAP = 4  # px entre le nom et le texte
+DIALOGUE_TEXT_FONT = DIMBO_FONT  # Cat Comic n'a pas les lettres accentuées
+DIALOGUE_TEXT_FONT_SIZE = 32
+DIALOGUE_HINT_FONT = CAT_COMIC_FONT  # sans accents, comme le nom
+DIALOGUE_HINT_FONT_SIZE = 22
+DIALOGUE_AUTO_ADVANCE = 10  # secondes avant de passer seul à la page suivante

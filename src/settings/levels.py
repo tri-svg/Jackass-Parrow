@@ -7,9 +7,20 @@ Disposition des tableaux, en cases de 50px (l'écran fait 24 x 16 cases).
         transparent : invisible et laisse passer les tirs (mais pas le joueur)
 """
 
+from src.settings import resources
+
 TILE_SIZE = 50
 BLOCK_OFFSET = (40, -25)  # décalage en px de la grille des blocs
 GROUND_ROW = 16  # les blocs de cette ligne utilisent la texture de terre
+
+# Couleur de l'herbe (le vert de la texture de terre) selon le fond ; fond absent = vert d'origine
+GRASS_COLORS = {
+    resources.BACKGROUND_BLUE: (28, 34, 92),  # bleu foncé (séries faciles)
+    resources.BACKGROUND_GREEN: (22, 66, 12),  # vert foncé (série moyenne)
+    resources.BACKGROUND_RED: (78, 18, 22),  # rouge foncé (séries hard)
+}
+GRASS_SOURCE_GREEN = (52, 165, 0)  # vert de l'herbe dans resources.DIRT_TEXTURE (prend la couleur ci-dessus)
+GRASS_MIN_GREEN_LEAD = 5  # un pixel est de l'herbe si son vert dépasse son rouge et son bleu d'autant
 
 # Blocs présents dans tous les tableaux : sol et murs
 COMMON_BLOCKS = [
@@ -144,6 +155,19 @@ LEVELS = [
 # ids (à partir de 1) utilisés par la progression : 1-5 normaux, 6-10 HARD
 NORMAL_LEVEL_IDS = (1, 5)
 HARD_LEVEL_IDS = (6, 10)
+
+# Tableau spécial (cf. settings/special_level.py) : une bande de blocs en bas et une en haut,
+# sur toute la largeur
+SPECIAL_BAND_HEIGHT = 3  # en cases
+SPECIAL_TOP_BAND_ROW = 0  # ligne du haut de la bande du haut
+SPECIAL_BOTTOM_BAND_ROW = GROUND_ROW - SPECIAL_BAND_HEIGHT  # ligne du haut de la bande du bas (posée sur le sol)
+SPECIAL_FIRST_COLUMN = -1  # les bandes vont d'un bord à l'autre de l'écran
+SPECIAL_BAND_WIDTH = 26
+SPECIAL_LEVEL = [
+    (1, 10),  # joueur, à gauche sur la bande du bas
+    (SPECIAL_FIRST_COLUMN, SPECIAL_TOP_BAND_ROW, SPECIAL_BAND_WIDTH, SPECIAL_BAND_HEIGHT),
+    (SPECIAL_FIRST_COLUMN, SPECIAL_BOTTOM_BAND_ROW, SPECIAL_BAND_WIDTH, SPECIAL_BAND_HEIGHT),
+]
 
 # Arènes de boss (sans point d'apparition : il est dans la config du boss, settings/bosses.py)
 ARENA_TOM = [

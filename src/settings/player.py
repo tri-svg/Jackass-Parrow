@@ -5,7 +5,8 @@ déplacements utilisent le delta time. C'est ce qui donne le côté goofy, on n'
 
 SPAWN_X = 200
 SPAWN_Y = 200
-HEALTH = 3
+HEALTH = 5  # PV au début de la partie
+MAX_HEALTH = 5  # PV maximum (affiché dans le HUD ; les soins ne vont pas au-delà)
 
 BASE_SPEED = 400  # px/s
 JUMP_FORCE = 1250  # px/s vers le haut au décollage

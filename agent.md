@@ -16,6 +16,9 @@ Projet sous Windows : fins de ligne CRLF dans le dossier de travail, LF dans git
   `assets/img/placeholder/`. Je les remplace moi-même plus tard, donc pas besoin de respecter
   leurs dimensions.
 - **Pas de nombres ni de chaînes magiques :** toute valeur réglable va dans `src/settings/`.
+- **Équilibrage :** je modifie moi-même `src/settings/` en dehors des prompts pour équilibrer le
+  jeu. Des changements inattendus dans ces fichiers sont donc normaux : ne pas les annuler, ne
+  pas les « corriger », et les garder dans les commits.
 - **Ressources :** toujours passer par `src/system/assets.py` (cache). Ne jamais charger une
   image ou un son dans une boucle ou par instance. Les surfaces de `assets.image()` sont
   partagées : ne jamais les modifier en place, utiliser `assets.image_copy()`.
@@ -33,7 +36,7 @@ src/settings/           TOUS les réglages : display, resources (noms de fichier
 src/system/
   assets.py             cache images/sons/polices
   GameManager.py        cycle d'une partie (tableaux, boss, fin de partie)
-  Progression.py        enchaînement des séries et des boss, danger, difficulté
+  Progression.py        enchaînement des séries et des boss, level, difficulté
   LevelCollection.py    construit les tableaux de settings/levels.py
   Sound.py              accès aux effets sonores
 src/entity/
@@ -53,7 +56,8 @@ assets/themes/theme.json  style pygame_gui (@menu_button, @boss_case, @window...
 - **Progression** (`settings/progression.py`) : série PREMIERE → Balerino → DEUXIEME → Tom →
   TROISIEME → Paya → BONUS → boss suivant... sans fin. Chaque série règle son nombre de
   tableaux, son pool de tableaux et son fond. Le fond d'un boss est celui de la série qui le
-  précède. Le danger (= nombre d'ennemis) monte de 1 par tableau.
+  précède. Le level (HUD) compte les tableaux, boss et tableau spécial ; un tableau a
+  level + `ENEMY_COUNT_OFFSET` ennemis (limité par ses blocs spawnable).
 - **Boss** : la classe de base gère l'affichage, les PV, l'invulnérabilité après un coup, la mort
   et l'outro. Les classes filles redéfinissent `attack`, `on_hit`, `get_obstacles`,
   `render_extra` et `setup_hard_mode`. À partir de la 2e rencontre, un boss passe en HARD : le

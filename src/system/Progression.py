@@ -20,9 +20,10 @@ class Progression:
     def __init__(self):
         self.stage = 0
         self.levels_done = 0  # tableaux joués dans la série en cours
-        self.danger_level = progression.DANGER_START
+        self.level = 0  # tableaux, boss et tableau spécial affrontés, celui en cours compris (HUD)
         self.last_level_id = -1
         self.boss_encounters = Counter()  # BossId -> nombre de rencontres (combat en cours inclus)
+        self.special_level_done = False
 
     # ------------------------------------------------------------------ séries
     @property
@@ -46,6 +47,18 @@ class Progression:
         """Fond de la série en cours (ou de la série précédente pendant un boss)."""
         return self._series()["background"]
 
+    def enemy_weights(self) -> dict:
+        """Ennemis de la série en cours : EnemyType -> chances relatives."""
+        return self._series()["enemies"]
+
+    def angry_above_level(self):
+        """Level au-delà duquel les chevaliers deviennent énervés dans la série en cours (None : jamais)."""
+        return self._series()["angry_above_level"]
+
+    def enemy_count(self) -> int:
+        """Nombre d'ennemis voulu pour le tableau en cours (avant la limite des blocs spawnable)."""
+        return max(0, self.level + progression.ENEMY_COUNT_OFFSET)
+
     def has_next_level(self) -> bool:
         """Reste-t-il des tableaux dans la série en cours ?"""
         return not self.is_boss_stage and self.levels_done < self.series_length()
@@ -60,21 +73,27 @@ class Progression:
             return BossDifficulty.HARD
         return BossDifficulty.NORMAL
 
+    def special_level_due(self) -> bool:
+        """Le tableau spécial doit-il suivre le boss en cours ? (une seule fois par partie)"""
+        return (not self.special_level_done and self.is_boss_stage
+                and self.current_boss() == progression.SPECIAL_LEVEL_AFTER_BOSS)
+
     # ------------------------------------------------------------------ avancement
+    def enter_level(self):
+        """Un tableau, un boss ou le tableau spécial commence : level suivant."""
+        self.level += 1
+
     def next_level_id(self) -> int:
-        """Tire le prochain tableau (différent du précédent) et augmente le danger."""
+        """Tire le prochain tableau (différent du précédent)."""
         low, high = self._series()["level_ids"]
         level_id = randint(low, high)
         while level_id == self.last_level_id and low != high:
             level_id = randint(low, high)
         self.last_level_id = level_id
         self.levels_done += 1
-        self.danger_level += 1
         return level_id
 
     def next_stage(self):
-        if self.is_boss_stage:
-            self.danger_level += progression.DANGER_BONUS_AFTER_BOSS
         self.stage += 1
         self.levels_done = 0
         if self.is_boss_stage:
