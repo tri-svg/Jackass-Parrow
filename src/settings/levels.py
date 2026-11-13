@@ -154,7 +154,14 @@ LEVELS = [
 
 # ids (à partir de 1) utilisés par la progression : 1-5 normaux, 6-10 HARD
 NORMAL_LEVEL_IDS = (1, 5)
+MID_LEVEL_IDS = None  # aucun pour l'instant ; ex. (11, 15)
 HARD_LEVEL_IDS = (6, 10)
+# fond des tableaux lancés depuis Options > Debug (et de leur miniature), selon leur difficulté
+LEVEL_DIFFICULTY_BACKGROUNDS = {
+    "normal": resources.BACKGROUND_BLUE,
+    "mid": resources.BACKGROUND_GREEN,
+    "hard": resources.BACKGROUND_RED,
+}
 
 # Tableau spécial (cf. settings/special_level.py) : une bande de blocs en bas et une en haut,
 # sur toute la largeur

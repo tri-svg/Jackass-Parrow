@@ -5,7 +5,9 @@ from src.block.BlockGroup import BlockGroup
 from src.entity.Bullet import LEFT, RIGHT, Bullet
 from src.settings import display, resources
 from src.settings import player as cfg
+from src.settings.controls import Action
 from src.system import assets
+from src.system.Options import OPTIONS
 from src.system.Sound import Sound
 
 GROUND_Y = display.HEIGHT  # bas de l'écran
@@ -53,15 +55,18 @@ class Player(pygame.sprite.Sprite):
         if self.health <= 0:
             return
 
-        if not keys[pygame.K_s]:
+        # touches : OPTIONS (fenêtre Options). Certains tests ne regardent que la touche principale,
+        # comme à l'origine (K_s, K_q, K_d sans les flèches) : comportement conservé.
+        pressed = OPTIONS.pressed
+        if not OPTIONS.primary_pressed(keys, Action.DOWN):
             self.shield = False
-        if keys[pygame.K_z] or keys[pygame.K_UP]:
+        if pressed(keys, Action.JUMP):
             if self.onGround:
                 self.gravity = -self.JUMP_FORCE
                 # premier décollage pour placer le joueur en état de saut
                 self.rect.y += self.gravity * delta_time
                 self.onGround = False
-        if keys[pygame.K_s] or keys[pygame.K_DOWN]:
+        if pressed(keys, Action.DOWN):
             if not self.onGround:
                 if self.gravity < self.MAX_FALL_SPEED:
                     self.gravity = self.MAX_FALL_SPEED
@@ -70,16 +75,17 @@ class Player(pygame.sprite.Sprite):
                 self.speed = 0
                 self.image.fill((0, 0, 0, 0))
                 self.image.blit(self.shield_image, (0, 0))
-        elif (keys[pygame.K_q] or keys[pygame.K_LEFT]) and not self.shield:
+        elif pressed(keys, Action.LEFT) and not self.shield:
             self.speed = -self.BASE_SPEED
             self.direction = LEFT
-        elif (keys[pygame.K_d] or keys[pygame.K_RIGHT]) and not self.shield:
+        elif pressed(keys, Action.RIGHT) and not self.shield:
             self.speed = self.BASE_SPEED
             self.direction = RIGHT
-        elif (not keys[pygame.K_q] and not keys[pygame.K_d]) or (keys[pygame.K_d] and keys[pygame.K_q]):
+        elif ((not OPTIONS.primary_pressed(keys, Action.LEFT) and not OPTIONS.primary_pressed(keys, Action.RIGHT))
+              or (OPTIONS.primary_pressed(keys, Action.RIGHT) and OPTIONS.primary_pressed(keys, Action.LEFT))):
             self.speed = 0
 
-        if keys[pygame.K_SPACE] and self.current_time - self.last_bullet_time > self.BULLET_DELAY:
+        if pressed(keys, Action.SHOOT) and self.current_time - self.last_bullet_time > self.BULLET_DELAY:
             # le canon est à l'arrière : on tire dans le dos
             bullets.add(Bullet(self.rect.x, self.rect.y + cfg.BULLET_OFFSET_Y, LEFT if self.direction == RIGHT else RIGHT))
             self.knockback = self.KNOCKBACK_FORCE if self.direction == RIGHT else -self.KNOCKBACK_FORCE

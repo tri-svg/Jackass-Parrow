@@ -1,43 +1,36 @@
 {
-    "defaults":
-    {
-        "colours":
-        {
-            "normal_bg":"#25292e",
-            "hovered_bg":"#35393e",
-            "disabled_bg":"#25292e",
-            "selected_bg":"#25292e",
-            "dark_bg":"#15191e",
-            "normal_text":"#c5cbd8",
-            "hovered_text":"#d5dbe8",
-            "selected_text":"#d5dbe8",
-            "disabled_text":"#6d736f",
+    "defaults": {
+        "colours": {
+            "normal_bg": "#25292e",
+            "hovered_bg": "#35393e",
+            "disabled_bg": "#25292e",
+            "selected_bg": "#25292e",
+            "dark_bg": "#15191e",
+            "normal_text": "#c5cbd8",
+            "hovered_text": "#d5dbe8",
+            "selected_text": "#d5dbe8",
+            "disabled_text": "#6d736f",
             "link_text": "#0000EE",
             "link_hover": "#0000FF",
             "link_selected": "#551A8B",
             "text_shadow": "#777777",
             "border_colour": "#888888",
             "disabled_border_colour": "#505050",
-            "filled_bar":"#f4251b",
-            "unfilled_bar":"#15191e"
+            "filled_bar": "#f4251b",
+            "unfilled_bar": "#15191e"
         }
     },
-
-    "@menu_button":
-    {
-        "font":
-        {
+    "@menu_button": {
+        "font": {
             "name": "cat_comic",
             "size": "35",
             "regular_path": "assets/fonts/Cat Comic.ttf"
         },
-        "colours":
-        {
+        "colours": {
             "normal_text": "#FFFFFF",
             "hovered_text": "#FFFFFF"
         },
-        "images":
-        {
+        "images": {
             "normal_image": {
                 "path": "assets/img/gui/button_normal.png"
             },
@@ -51,11 +44,9 @@
                 "path": "assets/img/gui/button_normal.png"
             }
         },
-        "misc":
-        {
+        "misc": {
             "auto_scale_images": "1",
-            "state_transitions":
-            {
+            "state_transitions": {
                 "normal_hovered": "0.3",
                 "hovered_normal": "0.3"
             },
@@ -83,10 +74,18 @@
             "active_text": "#FFFFFF"
         },
         "images": {
-            "normal_image": { "path": "assets/img/gui/boss_case_normal.png" },
-            "hovered_image": { "path": "assets/img/gui/boss_case_hover.png" },
-            "selected_image": { "path": "assets/img/gui/boss_case_normal.png" },
-            "disabled_image": { "path": "assets/img/gui/boss_case_normal.png" }
+            "normal_image": {
+                "path": "assets/img/gui/boss_case_normal.png"
+            },
+            "hovered_image": {
+                "path": "assets/img/gui/boss_case_hover.png"
+            },
+            "selected_image": {
+                "path": "assets/img/gui/boss_case_normal.png"
+            },
+            "disabled_image": {
+                "path": "assets/img/gui/boss_case_normal.png"
+            }
         },
         "misc": {
             "auto_scale_images": "1",
@@ -123,5 +122,181 @@
             "border_width": "0",
             "shadow_width": "0"
         }
+    },
+    "@tab": {
+        "font": {
+            "name": "dimbo_regular",
+            "regular_path": "assets/fonts/Dimbo Regular.ttf",
+            "size": "34"
+        },
+        "colours": {
+            "normal_text": "#FFFFFF",
+            "hovered_text": "#FFFFFF",
+            "normal_bg": "#00000000",
+            "hovered_bg": "#00000000",
+            "disabled_bg": "#00000000",
+            "disabled_text": "#9a7a5a"
+        },
+        "images": {
+            "normal_image": {
+                "path": "assets/img/gui/button_normal.png"
+            },
+            "hovered_image": {
+                "path": "assets/img/gui/button_hover.png"
+            },
+            "selected_image": {
+                "path": "assets/img/gui/button_normal.png"
+            },
+            "disabled_image": {
+                "path": "assets/img/gui/button_normal.png"
+            }
+        },
+        "misc": {
+            "auto_scale_images": "1",
+            "state_transitions": {
+                "normal_hovered": "0.3",
+                "hovered_normal": "0.3"
+            },
+            "border_width": "1",
+            "shadow_width": "15",
+            "text_horiz_alignment": "center",
+            "text_vert_alignment": "center"
+        }
+    },
+    "@tab_active": {
+        "font": {
+            "name": "dimbo_regular",
+            "regular_path": "assets/fonts/Dimbo Regular.ttf",
+            "size": "34"
+        },
+        "colours": {
+            "normal_text": "#FFE07A",
+            "hovered_text": "#FFE07A",
+            "normal_bg": "#00000000",
+            "hovered_bg": "#00000000",
+            "disabled_bg": "#00000000",
+            "disabled_text": "#9a7a5a"
+        },
+        "images": {
+            "normal_image": {
+                "path": "assets/img/gui/button_hover.png"
+            },
+            "hovered_image": {
+                "path": "assets/img/gui/button_hover.png"
+            },
+            "selected_image": {
+                "path": "assets/img/gui/button_normal.png"
+            },
+            "disabled_image": {
+                "path": "assets/img/gui/button_normal.png"
+            }
+        },
+        "misc": {
+            "auto_scale_images": "1",
+            "state_transitions": {
+                "normal_hovered": "0.3",
+                "hovered_normal": "0.3"
+            },
+            "border_width": "1",
+            "shadow_width": "15",
+            "text_horiz_alignment": "center",
+            "text_vert_alignment": "center"
+        }
+    },
+    "@key_button": {
+        "font": {
+            "name": "dimbo_regular",
+            "size": "28",
+            "regular_path": "assets/fonts/Dimbo Regular.ttf"
+        },
+        "colours": {
+            "normal_text": "#FFFFFF",
+            "hovered_text": "#FFFFFF",
+            "normal_bg": "#00000000",
+            "hovered_bg": "#00000000",
+            "disabled_bg": "#00000000",
+            "disabled_text": "#9a7a5a"
+        },
+        "images": {
+            "normal_image": {
+                "path": "assets/img/gui/button_normal.png"
+            },
+            "hovered_image": {
+                "path": "assets/img/gui/button_hover.png"
+            },
+            "selected_image": {
+                "path": "assets/img/gui/button_normal.png"
+            },
+            "disabled_image": {
+                "path": "assets/img/gui/button_normal.png"
+            }
+        },
+        "misc": {
+            "auto_scale_images": "1",
+            "state_transitions": {
+                "normal_hovered": "0.3",
+                "hovered_normal": "0.3"
+            },
+            "border_width": "1",
+            "shadow_width": "15",
+            "text_horiz_alignment": "center",
+            "text_vert_alignment": "center"
+        }
+    },
+    "@level_case": {
+        "colours": {
+            "normal_bg": "#00000000",
+            "hovered_bg": "#00000000",
+            "selected_bg": "#00000000",
+            "active_bg": "#00000000",
+            "disabled_bg": "#00000000"
+        },
+        "misc": {
+            "border_width": "0",
+            "shadow_width": "0"
+        }
+    },
+    "@options_panel": {
+        "colours": {
+            "dark_bg": "#00000000"
+        },
+        "misc": {
+            "border_width": "0",
+            "shadow_width": "0"
+        }
+    },
+    "@options_label": {
+        "colours": {
+            "dark_bg": "#00000000",
+            "normal_text": "#FFFFFF",
+            "text_shadow": "#000000"
+        },
+        "font": {
+            "name": "dimbo_regular",
+            "size": "28",
+            "regular_path": "assets/fonts/Dimbo Regular.ttf"
+        },
+        "misc": {
+            "text_shadow_size": "1",
+            "text_shadow_offset": "2,2"
+        }
+    },
+    "@volume_slider": {
+        "colours": {
+            "dark_bg": "#5a3210",
+            "normal_bg": "#a5611d",
+            "hovered_bg": "#c27426",
+            "active_bg": "#c27426",
+            "selected_bg": "#a5611d",
+            "border_colour": "#2a1606",
+            "normal_border": "#2a1606",
+            "normal_text": "#FFFFFF",
+            "hovered_text": "#FFFFFF"
+        },
+        "misc": {
+            "border_width": "3",
+            "shadow_width": "0",
+            "enable_arrow_buttons": "1"
+        }
     }
-}
+}

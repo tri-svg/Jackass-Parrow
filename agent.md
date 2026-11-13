@@ -38,6 +38,7 @@ src/system/
   GameManager.py        cycle d'une partie (tableaux, boss, fin de partie)
   Progression.py        enchaînement des séries et des boss, level, difficulté
   LevelCollection.py    construit les tableaux de settings/levels.py
+  Options.py            OPTIONS : volumes et touches du joueur (options.json), défauts dans settings/controls.py
   Sound.py              accès aux effets sonores
 src/entity/
   Player.py             joueur (physique fait main)
@@ -48,6 +49,8 @@ src/entity/
 src/block/              Block (cases de 50px), BlockGroup (apparition des ennemis)
 src/gui/Menu.py         menus, fenêtres (Histoire, Classement, Mode Boss), écrans de fin
 src/gui/MenuContext.py  menu actif + fenêtre modale active (une modale met le jeu en pause)
+src/gui/OptionsWindow.py  fenêtre Options : onglets Général (volumes), Touches, Debug (lance un tableau)
+src/gui/DialogueBox.py  boîte de dialogue style RPG Maker (tableau spécial)
 assets/themes/theme.json  style pygame_gui (@menu_button, @boss_case, @window...)
 ```
 

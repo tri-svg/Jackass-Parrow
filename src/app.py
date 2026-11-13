@@ -11,6 +11,7 @@ from src.settings import player as player_cfg
 from src.settings.bosses import INTRO_DURATION
 from src.system import assets
 from src.system.GameManager import GameManager
+from src.system.Options import OPTIONS
 from src.system.Sound import Sound
 
 
@@ -40,7 +41,7 @@ class App:
     def start(self):
         pygame.init()
         pygame.mixer.init(frequency=44100, size=-16, channels=2, buffer=512)
-        pygame.mixer.music.set_volume(resources.MUSIC_VOLUME)
+        OPTIONS.apply_volumes()
         assets.play_music(resources.MUSIC_MAIN)
         self.sounds = Sound()
         self.gameSurface = pygame.display.set_mode(self.size, pygame.HWSURFACE | pygame.DOUBLEBUF)
@@ -74,6 +75,12 @@ class App:
         self.menu_context.set_active_menu(MenuContext.START_MENU)
         self.menu_context.clear_active_modal()
         self.game_manager = GameManager(self.gameSurface)
+
+    def return_to_debug_menu(self):
+        """Fin d'un tableau lancé depuis Options > Debug : retour au menu principal, sur cet onglet."""
+        from src.gui.OptionsWindow import OptionsTab
+        self.restart()
+        self.menu.show_options_window(self, OptionsTab.DEBUG)
 
     def _render_hud(self):
         player = self.game_manager.player

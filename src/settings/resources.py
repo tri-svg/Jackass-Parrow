@@ -6,7 +6,12 @@ BACKGROUND_RED = ("background", "fondGameJamRed.png")
 BACKGROUND_BLUE = ("background", "fondGameJamBlue.png")
 MENU_WINDOW_BACKGROUND = ("background", "menu.png")
 BOSS_MENU_BACKGROUND = ("placeholder", "placeHolder_menu.png")
+OPTIONS_WINDOW_BACKGROUND = BOSS_MENU_BACKGROUND  # fenêtre Options (template)
 DIALOGUE_BACKGROUND = ("placeholder", "placeHolder_dialogue.png")  # boîte de dialogue (cadre gardé, intérieur en mosaïque : menu.DIALOGUE_FRAME)
+
+# Boutons (mêmes images que le thème pygame_gui, assets/themes/theme.json)
+GUI_BUTTON_NORMAL = ("gui", "button_normal.png")
+GUI_BUTTON_HOVER = ("gui", "button_hover.png")
 
 # Blocs
 BLOCK_TEXTURE = ("block", "block.png")
@@ -61,8 +66,8 @@ SOUND_PARRY = "parade.wav"
 # Musiques
 MUSIC_MAIN = "mainTheme.mp3"
 MUSIC_BOSS = "bossTheme.mp3"
-MUSIC_VOLUME = 0.15
 
 # Thème pygame_gui (relatif à assets/) et fichier des scores (relatif à la racine du projet)
 GUI_THEME = ("themes", "theme.json")
 SCORES_FILE = "scores.json"
+OPTIONS_FILE = "options.json"  # volumes et touches choisis par le joueur (fenêtre Options)

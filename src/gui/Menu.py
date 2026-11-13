@@ -5,6 +5,8 @@ import pygame
 import pygame_gui
 
 from src.gui.MenuContext import MenuContext
+from src.gui.OptionsWindow import OptionsTab, OptionsWindow
+from src.gui.widgets import PassiveImage
 from src.settings import display, menu, resources, texts
 from src.settings.bosses import BOSS_MENU_ORDER, BOSSES, BossConfig, BossId
 from src.system import assets
@@ -14,16 +16,6 @@ if TYPE_CHECKING:
 
 WIDTH, HEIGHT = display.WIDTH, display.HEIGHT
 WHITE = display.WHITE
-
-
-class PassiveImage(pygame_gui.elements.UIImage):
-    """Image qui ne capte pas la souris (laisse le survol et le clic au bouton placé dessous)."""
-
-    def can_hover(self) -> bool:
-        return False
-
-    def hover_point(self, hover_x: float, hover_y: float) -> bool:
-        return False
 
 
 def load_scores() -> list:
@@ -73,6 +65,7 @@ class Menu:
         self.boss_button = None
         self.lore_button = None
         self.leaderboard_button = None
+        self.options_button = None
         self.quit_button = None
 
         # fenêtres et leurs boutons de fermeture
@@ -83,6 +76,8 @@ class Menu:
         self.leaderboard_close_button = None
         self.boss_close_button = None
         self.boss_case_buttons: dict = {}  # bouton -> BossId
+        self.options_window: OptionsWindow = None
+        self.debug_page = 0  # page de l'onglet Debug, gardée pour y revenir après un tableau de debug
 
         # menu de fin de partie (enregistrement du score)
         self.save_button_rect = None
@@ -121,16 +116,25 @@ class Menu:
             object_id='@menu_button',
         )
 
+    def _button_under(self, text: str, image_rect: pygame.Rect) -> pygame_gui.elements.UIButton:
+        """Bouton du menu principal centré sous une illustration (Tom, le héros)."""
+        rect = pygame.Rect((0, 0), menu.BUTTON_SIZE)
+        rect.midtop = (image_rect.centerx, image_rect.bottom + menu.ILLUSTRATION_BUTTON_GAP)
+        return pygame_gui.elements.UIButton(relative_rect=rect, text=text, manager=self.ui_manager,
+                                            object_id='@menu_button')
+
     def _start_menu_buttons(self) -> tuple:
-        return self.start_button, self.boss_button, self.lore_button, self.leaderboard_button, self.quit_button
+        return (self.start_button, self.boss_button, self.lore_button, self.leaderboard_button,
+                self.options_button, self.quit_button)
 
     def setup_start_menu(self):
         self.game_surface.blit(self._background, (0, 0))
         self.start_button = self._menu_button(texts.BUTTON_START, 0)
         self.boss_button = self._menu_button(texts.BUTTON_BOSS_MODE, 1)
         self.lore_button = self._menu_button(texts.BUTTON_LORE, 2)
-        self.leaderboard_button = self._menu_button(texts.BUTTON_LEADERBOARD, 3)
-        self.quit_button = self._menu_button(texts.BUTTON_QUIT, 4)
+        self.options_button = self._menu_button(texts.BUTTON_OPTIONS, 3)
+        self.leaderboard_button = self._button_under(texts.BUTTON_LEADERBOARD, self._tom_rect)
+        self.quit_button = self._button_under(texts.BUTTON_QUIT, self._perso_rect)
 
     def show_start_screen(self, app: "App"):
         self.menu_context.set_active_menu(MenuContext.START_MENU)
@@ -151,6 +155,12 @@ class Menu:
 
     # ------------------------------------------------------------------ événements
     def handleMenu(self, event, app: "App"):
+        if self.options_window is not None:
+            self.options_window.handle(event)
+            if self.options_window is not None and self.options_window.closed:
+                self.options_window = None
+            return
+
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             self._handle_button(event.ui_element, app)
 
@@ -185,6 +195,9 @@ class Menu:
         elif element == self.leaderboard_button:
             app.sounds.son_button.play()
             self.show_leaderboard_window()
+        elif element == self.options_button:
+            app.sounds.son_button.play()
+            self.show_options_window(app)
         elif element == self.quit_button:
             app.quit()
         elif self.lore_close_button and element == self.lore_close_button:
@@ -193,6 +206,21 @@ class Menu:
             self.close_leaderboard_window()
         elif self.boss_close_button and element == self.boss_close_button:
             self.close_boss_window()
+
+    def show_options_window(self, app: "App", tab: OptionsTab = OptionsTab.GENERAL):
+        if self.options_window is not None:
+            return
+
+        def start_debug_level(level_id: int):
+            self.debug_page = self.options_window.debug_page
+            self.options_window = None
+            app.game_manager.start_debug_level(level_id)
+            self.menu_context.set_active_menu(MenuContext.INGAME_MENU)
+            self.hide_start_menu()
+
+        self.options_window = OptionsWindow(
+            self.ui_manager, lambda rect: self._window(rect, resources.OPTIONS_WINDOW_BACKGROUND), tab,
+            self.debug_page, start_debug_level, app.sounds.son_button.play)
 
     def start_boss_fight(self, app: "App", boss_id: BossId):
         app.game_manager.start_boss_mode(boss_id)

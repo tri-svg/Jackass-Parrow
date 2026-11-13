@@ -3,6 +3,15 @@ from src.block.BlockGroup import BlockGroup
 from src.settings import levels
 
 
+def level_difficulty(level_id: int) -> str:
+    """ "normal", "mid" ou "hard" selon les plages d'ids de settings/levels.py (None si hors plage)."""
+    for difficulty, id_range in (("normal", levels.NORMAL_LEVEL_IDS), ("mid", levels.MID_LEVEL_IDS),
+                                 ("hard", levels.HARD_LEVEL_IDS)):
+        if id_range is not None and id_range[0] <= level_id <= id_range[1]:
+            return difficulty
+    return None
+
+
 class LevelCollection:
     """Construit les tableaux décrits dans settings/levels.py dans un BlockGroup."""
 

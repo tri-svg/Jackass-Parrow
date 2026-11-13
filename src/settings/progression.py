@@ -51,14 +51,14 @@ SERIES = {
         "level_ids": levels.HARD_LEVEL_IDS,
         "background": resources.BACKGROUND_RED,
         "enemies": {EnemyType.KNIGHT: 3, EnemyType.KAMIKAZE: 1},
-        "angry_above_level": 5,
+        "angry_above_level": 16,
     },
     SeriesType.BONUS: {
         "level_count": 5,
         "level_ids": levels.NORMAL_LEVEL_IDS,
         "background": resources.BACKGROUND_RED,
         "enemies": {EnemyType.KNIGHT: 3, EnemyType.KAMIKAZE: 1},
-        "angry_above_level": 5,
+        "angry_above_level": 16,
     },
 }
 
@@ -72,3 +72,9 @@ SPECIAL_LEVEL_AFTER_BOSS = BossId.TOM
 
 # Nombre de rencontres avec un même boss avant qu'il passe en difficulté HARD
 BOSS_HARD_FROM_ENCOUNTER = 2
+
+# Tableaux lancés depuis Options > Debug : un ennemi par bloc spawnable, tirés comme dans une série
+DEBUG_LEVEL = {
+    "enemies": {EnemyType.KNIGHT: 3, EnemyType.KAMIKAZE: 1},
+    "angry_above_level": None,
+}

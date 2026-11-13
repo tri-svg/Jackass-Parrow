@@ -22,6 +22,10 @@ SOUNDS_DIR = ASSETS_DIR / "sounds"
 FONTS_DIR = ASSETS_DIR / "fonts"
 THEME_PATH = ASSETS_DIR.joinpath(*resources.GUI_THEME)
 SCORES_FILE_PATH = PROJECT_ROOT / resources.SCORES_FILE
+OPTIONS_FILE_PATH = PROJECT_ROOT / resources.OPTIONS_FILE
+
+_sound_volume = 1.0
+_loaded_sounds: list = []  # pour leur appliquer un changement de volume
 
 
 @lru_cache(maxsize=None)
@@ -57,7 +61,18 @@ def image_copy(*parts: str) -> pygame.Surface:
 
 @lru_cache(maxsize=None)
 def sound(name: str) -> pygame.mixer.Sound:
-    return pygame.mixer.Sound(str(SOUNDS_DIR / name))
+    loaded = pygame.mixer.Sound(str(SOUNDS_DIR / name))
+    loaded.set_volume(_sound_volume)
+    _loaded_sounds.append(loaded)
+    return loaded
+
+
+def set_sound_volume(volume: float) -> None:
+    """Volume (0-1) de tous les effets sonores, déjà chargés ou non."""
+    global _sound_volume
+    _sound_volume = volume
+    for loaded in _loaded_sounds:
+        loaded.set_volume(volume)
 
 
 @lru_cache(maxsize=None)

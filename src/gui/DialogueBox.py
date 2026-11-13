@@ -3,7 +3,9 @@ from functools import lru_cache
 import pygame
 
 from src.settings import display, menu, resources, texts
+from src.settings.controls import Action
 from src.system import assets
+from src.system.Options import OPTIONS
 
 
 @lru_cache(maxsize=None)
@@ -64,7 +66,7 @@ def _wrap(text: str, font: pygame.font.Font, max_width: int) -> list:
 class DialogueBox:
     """
     Boîte de dialogue en bas de l'écran, façon RPG Maker : portrait, nom, texte.
-    Espace passe à la page suivante ; sinon elle passe seule après menu.DIALOGUE_AUTO_ADVANCE secondes.
+    La touche de tir (Espace par défaut) passe à la page suivante ; sinon elle passe seule après menu.DIALOGUE_AUTO_ADVANCE secondes.
     """
 
     def __init__(self, speaker: str, pages: list, portrait: tuple = None):
@@ -72,7 +74,7 @@ class DialogueBox:
         self.page = 0
         self.page_start = pygame.time.get_ticks()
         self.finished = False
-        # Espace considéré comme enfoncé à l'ouverture (ex. le joueur tirait) : il faut le relâcher avant de passer
+        # touche considérée comme enfoncée à l'ouverture (ex. le joueur tirait) : il faut le relâcher avant de passer
         self.skip_was_down = True
 
         margin = menu.DIALOGUE_MARGIN
@@ -93,14 +95,15 @@ class DialogueBox:
         text_width = self.rect.width - self.text_left - padding
 
         self.name_surface = name_font.render(speaker, True, menu.DIALOGUE_NAME_COLOR)
-        self.hint_surface = hint_font.render(texts.DIALOGUE_NEXT_HINT, True, display.WHITE)
+        hint = texts.DIALOGUE_NEXT_HINT.format(key=OPTIONS.key_name(Action.SHOOT))
+        self.hint_surface = hint_font.render(hint, True, display.WHITE)
         self.page_lines = [[text_font.render(line, True, display.WHITE) for line in _wrap(text, text_font, text_width)]
                            for text in pages]
 
     def update(self, keys):
         if self.finished:
             return
-        skip_down = keys[pygame.K_SPACE]
+        skip_down = OPTIONS.pressed(keys, Action.SHOOT)
         pressed = skip_down and not self.skip_was_down
         self.skip_was_down = skip_down
         timed_out = pygame.time.get_ticks() - self.page_start >= menu.DIALOGUE_AUTO_ADVANCE * 1000

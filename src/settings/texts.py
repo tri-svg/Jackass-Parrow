@@ -1,3 +1,5 @@
+from src.settings.controls import Action
+
 GAME_TITLE = "Jackass-Parrow"
 
 # Menu principal
@@ -5,6 +7,7 @@ BUTTON_START = "Lancer"
 BUTTON_BOSS_MODE = "Mode Boss"
 BUTTON_LORE = "Histoire"
 BUTTON_LEADERBOARD = "Classement"
+BUTTON_OPTIONS = "Options"
 BUTTON_QUIT = "Quitter"
 BUTTON_CLOSE = "Fermer"
 
@@ -20,13 +23,36 @@ LORE = """
 LEADERBOARD_LINE = "{rank}. {pseudo} - {score}<br>"
 LEADERBOARD_SIZE = 10
 
+# Fenêtre Options
+OPTIONS_TAB_GENERAL = "Général"
+OPTIONS_TAB_KEYS = "Touches"
+OPTIONS_TAB_DEBUG = "Debug"
+OPTIONS_MUSIC_VOLUME = "Musique"
+OPTIONS_SOUND_VOLUME = "Effets sonores"
+OPTIONS_PERCENT = "{value} %"
+OPTIONS_KEYS_HINT = "Clique sur une case puis appuie sur une touche (Échap : annuler, Retour arrière : vider)"
+OPTIONS_WAITING_KEY = "..."
+OPTIONS_NO_KEY = "-"
+OPTIONS_RESET_KEYS = "Par défaut"
+ACTION_NAMES = {
+    Action.JUMP: "Sauter",
+    Action.LEFT: "Gauche",
+    Action.RIGHT: "Droite",
+    Action.DOWN: "Bouclier / descendre",
+    Action.SHOOT: "Tirer / dialogue",
+}
+DEBUG_LEVEL_NAME = "Tableau {level}"
+DEBUG_PREVIOUS = "<"
+DEBUG_NEXT = ">"
+DEBUG_PAGE = "{page} / {count}"
+
 # HUD
 HUD_SCORE = "Score: {score}"
 HUD_HEALTH = "Vie: {health}/{max_health}"
 HUD_LEVEL = "Level {level}"  # en haut à droite
 
 # Boîtes de dialogue
-DIALOGUE_NEXT_HINT = "Espace : suivant"
+DIALOGUE_NEXT_HINT = "{key} : suivant"  # {key} : touche de tir
 CUISTOT_NAME = "Cuistot Bongo"
 CUISTOT_DIALOGUE = [  # une boîte par entrée ; les PV sont rendus à la page special_level.CUISTOT_HEAL_PAGE
     "Tu as terrassé Tom, mais ton combat contre les troupes de l'Abbaye n'est pas fini...",

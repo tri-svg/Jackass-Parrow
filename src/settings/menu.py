@@ -1,9 +1,11 @@
+from src.settings import resources
 from src.settings.display import CAT_COMIC_FONT, DIMBO_FONT, HEIGHT, WIDTH
 
 # Boutons du menu principal
 BUTTON_SIZE = (220, 80)
 BUTTONS_TOP = HEIGHT // 2
 BUTTONS_SPACING = 70
+ILLUSTRATION_BUTTON_GAP = 10  # px entre une illustration et le bouton placé dessous (Classement, Quitter)
 
 # Illustrations du menu principal (Tom à gauche, le héros à droite)
 ILLUSTRATION_HEIGHT_RATIO = 1.4  # hauteur = HEIGHT / ratio
@@ -57,3 +59,40 @@ DIALOGUE_TEXT_FONT_SIZE = 32
 DIALOGUE_HINT_FONT = CAT_COMIC_FONT  # sans accents, comme le nom
 DIALOGUE_HINT_FONT_SIZE = 22
 DIALOGUE_AUTO_ADVANCE = 10  # secondes avant de passer seul à la page suivante
+
+# Fenêtre Options (onglets Général / Touches / Debug)
+OPTIONS_WINDOW_SIZE = (1000, 690)
+OPTIONS_TAB_SIZE = (220, 70)
+OPTIONS_TABS_TOP = 20
+OPTIONS_TAB_SPACING = 20
+OPTIONS_CONTENT_TOP = 105  # haut de la zone sous les onglets
+OPTIONS_GAP = 20
+OPTIONS_LABEL_WIDTH = 260
+OPTIONS_ROW_HEIGHT = 50
+OPTIONS_HINT_HEIGHT = 40
+# Général
+OPTIONS_GENERAL_TOP = 60
+OPTIONS_SLIDER_WIDTH = 400
+OPTIONS_SLIDER_STEP = 5  # % par clic sur les flèches de la barre
+OPTIONS_VALUE_WIDTH = 90
+# Touches
+OPTIONS_KEYS_TOP = 10
+OPTIONS_KEY_ROW_HEIGHT = 54
+OPTIONS_KEY_ROW_GAP = 8
+OPTIONS_KEY_BUTTON_WIDTH = 200
+OPTIONS_RESET_SIZE = (200, 60)  # boutons bois : garder ~ les proportions de l'image (923 x 276)
+# Debug : grille de miniatures des tableaux
+DEBUG_GRID = (3, 3)  # colonnes, lignes
+DEBUG_CASE_SIZE = (200, 150)
+DEBUG_CASE_GAP = (24, 8)
+DEBUG_CASE_PADDING = 8  # entre le haut de la case et la miniature
+DEBUG_CASE_FONT_SIZE = 24  # nom du tableau sous la miniature
+DEBUG_THUMBNAIL_SIZE = (176, 110)
+DEBUG_THUMBNAIL_BORDER = 5  # px du cadre de couleur
+DEBUG_DIFFICULTY_COLORS = {"normal": (40, 200, 60), "mid": (240, 210, 40), "hard": (220, 40, 40)}
+DEBUG_UNKNOWN_DIFFICULTY_COLOR = (150, 150, 150)
+DEBUG_ARROW_SIZE = (150, 50)
+DEBUG_ARROW_MARGIN = 12  # px entre la grille et les flèches
+DEBUG_ARROW_ZONE_GAP = 4  # px entre la grille et la zone cliquable de chaque flèche (toute la bande sur le côté)
+DEBUG_THUMBNAIL_BACKGROUND = resources.BACKGROUND_GREEN  # fond de toutes les miniatures
+DEBUG_SPAWNABLE_TINT = (255, 225, 0, 70)  # RGBA posé sur les blocs spawnable des miniatures
