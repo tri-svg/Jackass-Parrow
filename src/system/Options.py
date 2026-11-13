@@ -2,14 +2,15 @@ import json
 
 import pygame
 
-from src.settings import controls
+from src.settings import controls, display
 from src.settings.controls import Action
-from src.system import assets
+from src.settings.display import DisplayMode
+from src.system import Display, assets
 
 
 class Options:
     """
-    Options du joueur (volumes, touches), lues au lancement et enregistrées à chaque changement
+    Options du joueur (volumes, touches, affichage), lues au lancement et enregistrées à chaque changement
     dans resources.OPTIONS_FILE. Une seule instance : OPTIONS.
     """
 
@@ -17,6 +18,8 @@ class Options:
         self.music_volume = controls.DEFAULT_MUSIC_VOLUME
         self.sound_volume = controls.DEFAULT_SOUND_VOLUME
         self.bindings = {action: list(keys) for action, keys in controls.DEFAULT_BINDINGS.items()}
+        self.display_mode = display.DEFAULT_DISPLAY_MODE
+        self.window_size = display.DEFAULT_WINDOW_SIZE
         self.load()
 
     # ------------------------------------------------------------------ fichier
@@ -28,6 +31,13 @@ class Options:
             return
         self.music_volume = data.get("music_volume", self.music_volume)
         self.sound_volume = data.get("sound_volume", self.sound_volume)
+        try:
+            self.display_mode = DisplayMode(data.get("display_mode", self.display_mode.value))
+        except ValueError:
+            pass
+        size = data.get("window_size")
+        if isinstance(size, list) and len(size) == 2:
+            self.window_size = tuple(size)
         for action in Action:
             keys = data.get("bindings", {}).get(action.name)
             if isinstance(keys, list) and len(keys) == controls.BINDING_SLOTS:
@@ -37,6 +47,8 @@ class Options:
         data = {
             "music_volume": self.music_volume,
             "sound_volume": self.sound_volume,
+            "display_mode": self.display_mode.value,
+            "window_size": list(self.window_size),
             "bindings": {action.name: keys for action, keys in self.bindings.items()},
         }
         with open(assets.OPTIONS_FILE_PATH, "w", encoding="utf-8") as f:
@@ -56,6 +68,12 @@ class Options:
     def set_sound_volume(self, percent: int):
         self.sound_volume = percent
         self.apply_volumes()
+        self.save()
+
+    # ------------------------------------------------------------------ affichage
+    def set_display(self, mode: DisplayMode, window_size: tuple):
+        self.display_mode, self.window_size = mode, tuple(window_size)
+        Display.apply(self.display_mode, self.window_size)
         self.save()
 
     # ------------------------------------------------------------------ touches

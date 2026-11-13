@@ -298,5 +298,124 @@
             "shadow_width": "0",
             "enable_arrow_buttons": "1"
         }
+    },
+    "@options_dropdown": {
+        "colours": {
+            "normal_bg": "#a5611d",
+            "hovered_bg": "#c27426",
+            "selected_bg": "#c27426",
+            "active_bg": "#c27426",
+            "disabled_bg": "#6a4a2a",
+            "dark_bg": "#5a3210",
+            "normal_text": "#FFFFFF",
+            "hovered_text": "#FFFFFF",
+            "selected_text": "#FFFFFF",
+            "disabled_text": "#b8a080",
+            "normal_border": "#2a1606",
+            "border_colour": "#2a1606"
+        },
+        "font": {
+            "name": "dimbo_regular",
+            "size": "24",
+            "regular_path": "assets/fonts/Dimbo Regular.ttf"
+        },
+        "misc": {
+            "border_width": "3",
+            "shadow_width": "0",
+            "expand_direction": "down"
+        }
+    },
+    "@options_dropdown.#selected_option": {
+        "colours": {
+            "normal_bg": "#a5611d",
+            "hovered_bg": "#c27426",
+            "selected_bg": "#c27426",
+            "active_bg": "#c27426",
+            "disabled_bg": "#6a4a2a",
+            "dark_bg": "#5a3210",
+            "normal_text": "#FFFFFF",
+            "hovered_text": "#FFFFFF",
+            "selected_text": "#FFFFFF",
+            "disabled_text": "#b8a080",
+            "normal_border": "#2a1606",
+            "border_colour": "#2a1606"
+        },
+        "font": {
+            "name": "dimbo_regular",
+            "size": "24",
+            "regular_path": "assets/fonts/Dimbo Regular.ttf"
+        },
+        "misc": {
+            "border_width": "3",
+            "shadow_width": "0",
+            "text_horiz_alignment": "center"
+        }
+    },
+    "@options_dropdown.#expand_button": {
+        "colours": {
+            "normal_bg": "#a5611d",
+            "hovered_bg": "#c27426",
+            "selected_bg": "#c27426",
+            "active_bg": "#c27426",
+            "disabled_bg": "#6a4a2a",
+            "dark_bg": "#5a3210",
+            "normal_text": "#FFFFFF",
+            "hovered_text": "#FFFFFF",
+            "selected_text": "#FFFFFF",
+            "disabled_text": "#b8a080",
+            "normal_border": "#2a1606",
+            "border_colour": "#2a1606"
+        },
+        "misc": {
+            "border_width": "3",
+            "shadow_width": "0",
+            "text_horiz_alignment": "center"
+        }
+    },
+    "@options_dropdown.#drop_down_options_list": {
+        "colours": {
+            "normal_bg": "#a5611d",
+            "hovered_bg": "#c27426",
+            "selected_bg": "#c27426",
+            "active_bg": "#c27426",
+            "disabled_bg": "#6a4a2a",
+            "dark_bg": "#5a3210",
+            "normal_text": "#FFFFFF",
+            "hovered_text": "#FFFFFF",
+            "selected_text": "#FFFFFF",
+            "disabled_text": "#b8a080",
+            "normal_border": "#2a1606",
+            "border_colour": "#2a1606"
+        },
+        "misc": {
+            "border_width": "3",
+            "shadow_width": "0",
+            "list_item_height": "30"
+        }
+    },
+    "@options_dropdown.#drop_down_options_list.button": {
+        "colours": {
+            "normal_bg": "#a5611d",
+            "hovered_bg": "#c27426",
+            "selected_bg": "#c27426",
+            "active_bg": "#c27426",
+            "disabled_bg": "#6a4a2a",
+            "dark_bg": "#5a3210",
+            "normal_text": "#FFFFFF",
+            "hovered_text": "#FFFFFF",
+            "selected_text": "#FFFFFF",
+            "disabled_text": "#b8a080",
+            "normal_border": "#2a1606",
+            "border_colour": "#2a1606"
+        },
+        "font": {
+            "name": "dimbo_regular",
+            "size": "24",
+            "regular_path": "assets/fonts/Dimbo Regular.ttf"
+        },
+        "misc": {
+            "border_width": "0",
+            "shadow_width": "0"
+        }
     }
 }

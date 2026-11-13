@@ -9,7 +9,7 @@ from src.gui.MenuContext import MenuContext
 from src.settings import display, menu, resources, texts
 from src.settings import player as player_cfg
 from src.settings.bosses import INTRO_DURATION
-from src.system import assets
+from src.system import Display, assets
 from src.system.GameManager import GameManager
 from src.system.Options import OPTIONS
 from src.system.Sound import Sound
@@ -44,7 +44,7 @@ class App:
         OPTIONS.apply_volumes()
         assets.play_music(resources.MUSIC_MAIN)
         self.sounds = Sound()
-        self.gameSurface = pygame.display.set_mode(self.size, pygame.HWSURFACE | pygame.DOUBLEBUF)
+        self.gameSurface = Display.create_window(OPTIONS.display_mode, OPTIONS.window_size)
         self._running = True
 
         self.HUDfont = assets.font(display.CAT_COMIC_FONT, display.HUD_FONT_SIZE)

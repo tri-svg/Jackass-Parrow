@@ -38,7 +38,8 @@ src/system/
   GameManager.py        cycle d'une partie (tableaux, boss, fin de partie)
   Progression.py        enchaînement des séries et des boss, level, difficulté
   LevelCollection.py    construit les tableaux de settings/levels.py
-  Options.py            OPTIONS : volumes et touches du joueur (options.json), défauts dans settings/controls.py
+  Options.py            OPTIONS : volumes, touches et affichage du joueur (options.json), défauts dans settings/controls.py
+  Display.py            fenêtre : fenêtré (tailles au choix) ou sans bordure, jeu agrandi par pygame.SCALED
   Sound.py              accès aux effets sonores
 src/entity/
   Player.py             joueur (physique fait main)
@@ -55,6 +56,11 @@ assets/themes/theme.json  style pygame_gui (@menu_button, @boss_case, @window...
 ```
 
 ## Fonctionnement à connaître
+
+- **Résolution** : le jeu est toujours calculé et dessiné en `display.WIDTH x display.HEIGHT` (1280 x 800).
+  `system/Display.py` ouvre la fenêtre en `pygame.SCALED` : SDL agrandit l'image à la taille de la fenêtre
+  (bandes noires en 16:9) et convertit la souris. Ne jamais utiliser la taille réelle de la fenêtre dans le
+  code de jeu ou des menus : c'est ce qui garantit le même comportement quelle que soit la taille choisie.
 
 - **Progression** (`settings/progression.py`) : série PREMIERE → Balerino → DEUXIEME → Tom →
   TROISIEME → Paya → BONUS → boss suivant... sans fin. Chaque série règle son nombre de

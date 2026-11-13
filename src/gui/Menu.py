@@ -139,8 +139,12 @@ class Menu:
     def show_start_screen(self, app: "App"):
         self.menu_context.set_active_menu(MenuContext.START_MENU)
         self.game_surface.blit(self._background, (0, 0))
+        # la grande fenêtre Options recouvre les boutons du bas (Classement, Quitter) : on les cache
         for button in self._start_menu_buttons():
-            button.show()
+            if self.options_window is None:
+                button.show()
+            else:
+                button.hide()
 
         self.game_surface.blit(self._tom_image, self._tom_rect)
         self.game_surface.blit(self._perso_image, self._perso_rect)
@@ -218,6 +222,7 @@ class Menu:
             self.menu_context.set_active_menu(MenuContext.INGAME_MENU)
             self.hide_start_menu()
 
+        self.hide_start_menu()  # tout de suite : sinon pygame_gui les affiche encore une frame
         self.options_window = OptionsWindow(
             self.ui_manager, lambda rect: self._window(rect, resources.OPTIONS_WINDOW_BACKGROUND), tab,
             self.debug_page, start_debug_level, app.sounds.son_button.play)

@@ -1,4 +1,5 @@
 from src.settings.controls import Action
+from src.settings.display import DisplayMode
 
 GAME_TITLE = "Jackass-Parrow"
 
@@ -27,6 +28,13 @@ LEADERBOARD_SIZE = 10
 OPTIONS_TAB_GENERAL = "Général"
 OPTIONS_TAB_KEYS = "Touches"
 OPTIONS_TAB_DEBUG = "Debug"
+OPTIONS_DISPLAY_MODE = "Affichage"
+OPTIONS_WINDOW_SIZE = "Taille de la fenêtre"
+DISPLAY_MODE_NAMES = {
+    DisplayMode.WINDOWED: "Fenêtré",
+    DisplayMode.BORDERLESS: "Fenêtré sans bordure",
+}
+WINDOW_SIZE_NAME = "{width} x {height}"
 OPTIONS_MUSIC_VOLUME = "Musique"
 OPTIONS_SOUND_VOLUME = "Effets sonores"
 OPTIONS_PERCENT = "{value} %"

@@ -8,7 +8,8 @@ import pygame_gui
 from src.block.BlockGroup import BlockGroup
 from src.gui.widgets import PassiveImage
 from src.settings import controls, display, levels, menu, resources, texts
-from src.system import assets
+from src.settings.display import DisplayMode
+from src.system import Display, assets
 from src.system.LevelCollection import LevelCollection, level_difficulty
 from src.system.Options import OPTIONS
 
@@ -140,12 +141,34 @@ class OptionsWindow:
         slider_width = menu.OPTIONS_SLIDER_WIDTH
         value_width = menu.OPTIONS_VALUE_WIDTH
         left = (self.width - label_width - slider_width - value_width - 2 * menu.OPTIONS_GAP) // 2
+        # affichage : mode et taille de fenêtre (menus déroulants)
+        dropdown_width = slider_width
+        self.mode_names = {texts.DISPLAY_MODE_NAMES[mode]: mode for mode in DisplayMode}
+        self.size_names = {texts.WINDOW_SIZE_NAME.format(width=w, height=h): (w, h)
+                           for w, h in Display.available_window_sizes()}
+        current_size = texts.WINDOW_SIZE_NAME.format(width=OPTIONS.window_size[0], height=OPTIONS.window_size[1])
+        if current_size not in self.size_names:  # taille enregistrée qui ne tient plus sur cet écran
+            self.size_names[current_size] = OPTIONS.window_size
+        y = menu.OPTIONS_GENERAL_TOP
+        self._label(panel, pygame.Rect(left, y, label_width, row_height), texts.OPTIONS_DISPLAY_MODE)
+        self.mode_dropdown = pygame_gui.elements.UIDropDownMenu(
+            options_list=list(self.mode_names), starting_option=texts.DISPLAY_MODE_NAMES[OPTIONS.display_mode],
+            relative_rect=pygame.Rect(left + label_width + menu.OPTIONS_GAP, y, dropdown_width, row_height),
+            manager=self.ui_manager, container=panel, object_id='@options_dropdown')
+        y += row_height + menu.OPTIONS_GAP
+        self._label(panel, pygame.Rect(left, y, label_width, row_height), texts.OPTIONS_WINDOW_SIZE)
+        self.size_dropdown = pygame_gui.elements.UIDropDownMenu(
+            options_list=list(self.size_names), starting_option=current_size,
+            relative_rect=pygame.Rect(left + label_width + menu.OPTIONS_GAP, y, dropdown_width, row_height),
+            manager=self.ui_manager, container=panel, object_id='@options_dropdown')
+        self._refresh_size_dropdown()
+
         self.sliders = {}
         self.slider_values = {}
         rows = [("music", texts.OPTIONS_MUSIC_VOLUME, OPTIONS.music_volume),
                 ("sound", texts.OPTIONS_SOUND_VOLUME, OPTIONS.sound_volume)]
         for index, (name, title, value) in enumerate(rows):
-            y = menu.OPTIONS_GENERAL_TOP + index * (row_height + menu.OPTIONS_GAP)
+            y = menu.OPTIONS_GENERAL_TOP + (index + 2) * (row_height + menu.OPTIONS_GAP)
             self._label(panel, pygame.Rect(left, y, label_width, row_height), title)
             slider = pygame_gui.elements.UIHorizontalSlider(
                 relative_rect=pygame.Rect(left + label_width + menu.OPTIONS_GAP, y, slider_width, row_height),
@@ -155,6 +178,20 @@ class OptionsWindow:
             self.slider_values[name] = self._label(
                 panel, pygame.Rect(left + label_width + slider_width + 2 * menu.OPTIONS_GAP, y, value_width, row_height),
                 texts.OPTIONS_PERCENT.format(value=value))
+
+    def _refresh_size_dropdown(self):
+        """La taille ne compte qu'en mode fenêtré (sans bordure : taille de l'écran)."""
+        if OPTIONS.display_mode == DisplayMode.WINDOWED:
+            self.size_dropdown.enable()
+        else:
+            self.size_dropdown.disable()
+
+    def _on_dropdown(self, dropdown, text: str):
+        if dropdown == self.mode_dropdown:
+            OPTIONS.set_display(self.mode_names[text], OPTIONS.window_size)
+            self._refresh_size_dropdown()
+        elif dropdown == self.size_dropdown:
+            OPTIONS.set_display(OPTIONS.display_mode, self.size_names[text])
 
     def _on_slider(self, slider, value):
         name = self.sliders[slider]
@@ -293,6 +330,10 @@ class OptionsWindow:
             if event.ui_element in self.level_images:
                 hovered = event.type == pygame_gui.UI_BUTTON_ON_HOVERED
                 self.level_images[event.ui_element].set_image(level_case(self.level_buttons[event.ui_element], hovered))
+            return
+        if event.type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED and event.ui_element in (self.mode_dropdown,
+                                                                                    self.size_dropdown):
+            self._on_dropdown(event.ui_element, event.text)
             return
         if event.type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED and event.ui_element in self.sliders:
             self._on_slider(event.ui_element, event.value)
